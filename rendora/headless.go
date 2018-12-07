@@ -53,16 +53,24 @@ func resolveURLHostname(arg string) (string, error) {
 }
 
 func checkHeadless(arg string) error {
+	doCheck := func() error {
+		resp, err := http.Get(arg + "/json/version")
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		return nil
+	}
 
 	for i := 0; i < 4; i++ {
-		_, err := http.Get(arg + "/json/version")
+		err := doCheck()
 		if err == nil {
 			return nil
 		}
 		log.Println("Cannot connect to the headless Chrome instance, trying again after 2 seconds...")
 		time.Sleep(2 * time.Second)
 	}
-	_, err := http.Get(arg)
+	err := doCheck()
 	if err == nil {
 		return nil
 	}
@@ -146,7 +154,7 @@ func NewHeadlessClient() (*HeadlessClient, error) {
 
 //GoTo navigates to the url, fetches the DOM and returns HeadlessResponse
 func (c *HeadlessClient) GoTo(uri string) (*HeadlessResponse, error) {
-	
+
 	c.Mtx.Lock()
 	defer c.Mtx.Unlock()
 
