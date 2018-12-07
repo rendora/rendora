@@ -1,0 +1,36 @@
+
+debug: true
+listen:
+    port: 3001
+
+cache:
+    type: none
+    timeout: 60
+    redis:
+        address: localhost:6379
+
+target:
+    url: "http://127.0.0.1"
+
+backend:
+    url: "http://127.0.0.1:8000"
+
+headless:
+    internal:
+      url: http://headless:9222
+
+output:
+    minify: true
+
+filters:
+    preset: all
+    userAgent:
+        defaultPolicy: whitelist
+    paths:
+        defaultPolicy: whitelist
+        exceptions:
+            prefix:
+                - /static
+
+server:
+    enable: true
