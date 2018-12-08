@@ -23,9 +23,9 @@ type reqBody struct {
 
 //HeadlessResponse contains the status code, DOM content and headers of the response coming from the headless chrome instance
 type HeadlessResponse struct {
-	Status  int
-	Content string
-	Headers map[string]string
+	Status  int               `json:"status"`
+	Content string            `json:"content"`
+	Headers map[string]string `json:"headers"`
 }
 
 func getHeadlessExternal(uri string) (*HeadlessResponse, error) {
