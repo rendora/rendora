@@ -217,7 +217,7 @@ func (c *HeadlessClient) GoTo(uri string) (*HeadlessResponse, error) {
 		return nil, err
 	}
 	ret := &HeadlessResponse{
-		Body:    domResponse.OuterHTML,
+		Content:    domResponse.OuterHTML,
 		Status:  responseReply.Response.Status,
 		Headers: responseHeaders,
 	}

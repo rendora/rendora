@@ -21,10 +21,10 @@ type reqBody struct {
 	URL string `json:"url"`
 }
 
-//HeadlessResponse contains the status code, body and headers of the response coming from the headless chrome instance
+//HeadlessResponse contains the status code, DOM content and headers of the response coming from the headless chrome instance
 type HeadlessResponse struct {
 	Status  int
-	Body    string
+	Content string
 	Headers map[string]string
 }
 
@@ -103,7 +103,7 @@ func getResponse(uri string) (*HeadlessResponse, error) {
 		m := minify.New()
 		m.AddFunc("text/html", html.Minify)
 		m.AddFunc("text/css", css.Minify)
-		dt.Body, err = m.String("text/html", dt.Body)
+		dt.Content, err = m.String("text/html", dt.Content)
 	}
 
 	defer Rendora.Cache.Set(cKey, dt)
@@ -124,7 +124,7 @@ func getSSR(c *gin.Context) {
 	}
 
 	c.Header("Content-Type", contentHdr)
-	c.String(resp.Status, resp.Body)
+	c.String(resp.Status, resp.Content)
 
 	if Rendora.C.Server.Enable {
 		Rendora.M.CountSSR.Inc()
