@@ -48,16 +48,18 @@ Also note that almost all config variables are optional. What is required curren
 		"https://fonts.googleapis.com/*"]`
 - `output`
     - `minify` *(optional)*, minify the SSR'ed HTML, this is done before caching so that it doesn't get executed for every whitelisted request
-- `filters`
-    - `preset` *(optional)*, if the preset is set to `bots` then the user agent is checked against some default *keywords* to see whether the request is whitelisted or not. You can override these keywords in `filters.userAgent.keywords` as shown below.
+- `filters` *(optional)*, set your filters to decide which requests get whitelisted (i.e. SSR'ed) and which get blacklisted (i.e. get the typical initial client-side rendered HTML). Rendora checks user agent filters first, then checks paths filters
     - `userAgent`
         - `defaultPolicy` *(optional)*, The default policy of whether the user agents should be whitelisted (i.e. get SSR'ed) or blacklisted (i.e. just return the initial HTML coming from the backend server)
             - allowed values: `whitelist` and `blacklist`
-            - default: `whitelist`
-        - `keywords` *(optional)*, The allowed keywords (in lowercase since request user agents are converted to lowercase before testing them against keywords) in the request's user agent, if it contains any of these keywrords then the request is considered whitelisted, otherwise it is blacklisted. Keywords are only used when  `filters.preset` is set to `bots` and it's totally ignored when it is set to `all`.
-            - default: `["bot", "google", "slurp", "yandex", "crawler", "search"]`
-        - `exceptions` *(optional)* You can also add exceptions against the default policy, if `defaultPolicy` is set to `whitelist`, then exceptions are blacklisted and vice versa.
-            - example: `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.67 Safari/537.36`
+            - default: `blacklist`
+            - `exceptions` *(optional)* You can also add exceptions against the default policy, if `defaultPolicy` is set to `whitelist`, then exceptions are blacklisted and vice versa.
+                - `keywords` *(optional)*, The allowed keywords (in lowercase since request user agents are converted to lowercase before testing them against keywords) in the request's user agent, if it contains any of these keywords then the request is considered whitelisted, otherwise it is blacklisted. Keywords are only used when  `filters.preset` is set to `bots` and it's totally ignored when it is set to `all`.
+                - default: empty list
+                - example: `["bot", "bing", "yandex", "slurp", "duckduckgo"]`
+            - `exact` *(optional)* You can also add exact user agents
+                - default: empty list
+                - example: `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.67 Safari/537.36`
         - `paths` *(optional)*, Paths are checked only if the request user agent is checked and passes its filters
             - `defaultPolicy` *(optional)*, if the default policy is "whitelist" then any path is whitelisted, if it is "blacklist" then all paths are blacklisted
                 - allowed values: `whitelist` and `blacklist`
@@ -92,6 +94,16 @@ target:
     url: "http://127.0.0.1" 
 backend:
     url: "http://127.0.0.1:8000"
+
+filters:
+    userAgent:
+        defaultPolicy: blacklist
+        exceptions:
+            keywords:
+                - bot
+                - slurp
+                - bing
+                - crawler
 ```
 
 ### A more customized config file
@@ -116,15 +128,14 @@ headless:
 output:
     minify: true
 filters:
-    preset: bots
     userAgent:
-        defaultPolicy: whitelist
-        keywords:
-           - bot
-           - slurp
-           - crawler
+        defaultPolicy: blacklist
         exceptions:
-            - Mozilla/5.0 (compatible; AhrefsBot/5.2; +http://ahrefs.com/robot/)
+            keywords:
+                - bot
+                - slurp
+                - bing
+                - crawler
     paths:
         defaultPolicy: whitelist
         exceptions:

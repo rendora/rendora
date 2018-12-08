@@ -90,6 +90,24 @@ You can read the docs [here](https://rendora.co/docs/) or [here](docs)
 ## Configuration
 Configuration is discussed in detail in docs [here](https://rendora.co/docs/configuration/) or [here](docs/configuration)
 
+### A minimal config file example
+```yaml
+target:
+    url: "http://127.0.0.1" 
+backend:
+    url: "http://127.0.0.1:8000"
+
+filters:
+    userAgent:
+        defaultPolicy: blacklist
+        exceptions:
+            keywords:
+                - bot
+                - slurp
+                - bing
+                - crawler
+```
+
 
 ## FAQs
 
