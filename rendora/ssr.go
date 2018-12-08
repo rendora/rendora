@@ -26,6 +26,7 @@ type HeadlessResponse struct {
 	Status  int               `json:"status"`
 	Content string            `json:"content"`
 	Headers map[string]string `json:"headers"`
+	Latency float64           `json:"latency"`
 }
 
 func getHeadlessExternal(uri string) (*HeadlessResponse, error) {

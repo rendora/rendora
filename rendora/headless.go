@@ -206,8 +206,10 @@ func (c *HeadlessClient) GoTo(uri string) (*HeadlessResponse, error) {
 		return nil, err
 	}
 
+	elapsed := float64(time.Since(timeStart)) / float64(time.Duration(1*time.Millisecond))
+
 	if Rendora.C.Server.Enable {
-		elapsed := float64(time.Since(timeStart)) / float64(time.Duration(1*time.Millisecond))
+		
 		Rendora.M.Duration.Observe(elapsed)
 	}
 
@@ -220,6 +222,7 @@ func (c *HeadlessClient) GoTo(uri string) (*HeadlessResponse, error) {
 		Content:    domResponse.OuterHTML,
 		Status:  responseReply.Response.Status,
 		Headers: responseHeaders,
+		Latency: elapsed,
 	}
 
 	return ret, nil
