@@ -6,6 +6,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func isKeywordInSlice(slice []string, str string) bool {
+	for _, s := range slice {
+		if strings.Index(str, s) >= 0 {
+			return true
+		}
+	}
+	return false
+}
+
 func isInSlice(slice []string, str string) bool {
 	for _, s := range slice {
 		if s == str {
@@ -24,50 +33,40 @@ func hasPrefixinSlice(slice []string, str string) bool {
 	return false
 }
 
-var allowedWords []string
-
-func isBot(ua string) (bool, bool) {
-	muaLower := strings.ToLower(ua)
-
-	for _, s := range allowedWords {
-		if strings.Index(muaLower, s) >= 0 {
-			return true, strings.Index(muaLower, "mobile") >= 0
-		}
-	}
-	return false, false
-}
-
 //IsWhitelisted checks whether the current request is whitelisted (i.e. should be SSR'ed) or not
 func IsWhitelisted(c *gin.Context) bool {
 	mua := c.Request.Header.Get("User-Agent")
+	muaLower := strings.ToLower(mua)
 	filters := &Rendora.C.Filters
+
+	lenKeywords := len(filters.UserAgent.Exceptions.Keywords)
+	lenExceptions := len(filters.UserAgent.Exceptions.Exact)
 
 	switch filters.UserAgent.Default {
 	case "whitelist":
-		isbot, _ := isBot(mua)
-		if filters.Preset == "bots" && isbot == false {
+
+		if lenKeywords > 0 && isKeywordInSlice(filters.UserAgent.Exceptions.Keywords, muaLower) {
 			return false
 		}
-		if isInSlice(filters.UserAgent.Exceptions, mua) {
+		if lenExceptions > 0 && isInSlice(filters.UserAgent.Exceptions.Exact, mua) {
 			return false
 		}
 		break
 	case "blacklist":
-		if isInSlice(filters.UserAgent.Exceptions, mua) == false {
+		if lenKeywords == 0 && lenExceptions == 0 {
+			return false
+		}
+		if lenKeywords > 0 && isKeywordInSlice(filters.UserAgent.Exceptions.Keywords, muaLower) == false {
+			return false
+		}
+
+		if lenExceptions > 0 && isInSlice(filters.UserAgent.Exceptions.Exact, mua) == false {
 			return false
 		}
 
 	}
 
 	uri := c.Request.RequestURI
-
-	if len(filters.Paths.Static.Exact) > 0 && isInSlice(filters.Paths.Static.Exact, uri) {
-		return false
-	}
-
-	if len(filters.Paths.Static.Prefix) > 0 && hasPrefixinSlice(filters.Paths.Static.Prefix, uri) {
-		return false
-	}
 
 	switch filters.Paths.Default {
 	case "blacklist":
