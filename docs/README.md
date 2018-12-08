@@ -28,8 +28,7 @@ For every request coming from the frontend server or the outside world, there ar
 
 1. If the request is whitelisted as a candidate for SSR (i.e. a GET request that passes all user agent and path filters), Rendora instructs the headless Chrome instance to request the corresponding page, render it and return the response which contains the final server-side rendered HTML. You usually want to whitelist only web crawlers like GoogleBot, BingBot, etc...
 
-2. If the request isn't whitelisted (i.e. the request is not a GET request or doesn't pass any of the filters), Rendora will simply act as a transparent reverse HTTP proxy and just pass requests and responses as they are. You usually want to blacklist human users in order to return the usual client-side rendered HTML coming from the backend
-server back to them.
+2. If the request isn't whitelisted (i.e. the request is not a GET request or doesn't pass any of the filters), Rendora will simply act as a transparent reverse HTTP proxy and just conveys requests and responses as they are. You usually want to blacklist real users in order to return the usual client-side rendered HTML coming from the backend server back to them.
 
 
 

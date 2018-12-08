@@ -46,8 +46,7 @@ For every request coming from the frontend server or the outside world, there ar
 
 1. If the request is whitelisted as a candidate for SSR (i.e. a GET request that passes all user agent and path filters), Rendora instructs the headless Chrome instance to request the corresponding page, render it and return the response which contains the final server-side rendered HTML. You usually want to whitelist only web crawlers like GoogleBot, BingBot, etc...
 
-2. If the request isn't whitelisted (i.e. the request is not a GET request or doesn't pass any of the filters), Rendora will simply act as a transparent reverse HTTP proxy and just pass requests and responses as they are. You usually want to blacklist human users in order to return the usual client-side rendered HTML coming from the backend
-server back to them.
+2. If the request isn't whitelisted (i.e. the request is not a GET request or doesn't pass any of the filters), Rendora will simply act as a transparent reverse HTTP proxy and just conveys requests and responses as they are. You usually want to blacklist real users in order to return the usual client-side rendered HTML coming from the backend server back to them.
 
 
 
@@ -69,7 +68,7 @@ docker run --tmpfs /tmp --net=host rendora/chrome-headless
 
 ### Then, run Rendora
 
-you can build and run Rendora from source code, (**NOTE**: please read the [configuration manual](configuration/) before running Rendora)
+you can build and run Rendora from source code, (**NOTE**: please read the [configuration manual](docs/configuration/) before running Rendora)
 
 ``` bash
 git clone https://github.com/rendora/rendora
@@ -113,7 +112,7 @@ filters:
 
 ### What is the difference between Rendora and Puppeteer?
 
-[Puppeteer](https://github.com/GoogleChrome/puppeteer) is a great Node.js library which provides a generic high-level API to control Chrome. On the other hand, Rendora is a dynamic renderer that acts as a reverse HTTP proxy placed in front of your backend server to provide server-side rendering mainly to web crawlers in order to effortlessly improve SEO.
+[Puppeteer](https://github.com/GoogleChrome/puppeteer) is a great Node.js library which provides a generic high-level API to control headless Chrome. On the other hand, Rendora is a dynamic renderer that acts as a reverse HTTP proxy placed in front of your backend server to provide server-side rendering mainly to web crawlers in order to effortlessly improve SEO.
 
 
 ### What is the difference between Rendora and Rendertron?
