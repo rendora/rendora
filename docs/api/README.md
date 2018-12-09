@@ -1,3 +1,6 @@
+---
+title: API
+---
 
 # API
 
@@ -8,9 +11,10 @@ Rendora can be configured when the config `server.enable` is set to `true` to pr
     * request body: A serialized json object that contains:
         * `uri`: the request uri (e.g. `/posts`)
     * response body: A serialized json object that contains:
-        * `body`: the SSR'ed HTML page
+        * `content`: the SSR'ed HTML page
         * `status`: the status code
         * `headers`: response headers
+        * `latency`: latency in milliseconds for the SSR operation
 * **metrics**: provides Prometheus metrics
     * endpoint: `GET /metrics`
     * Rendora's metrics:

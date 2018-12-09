@@ -1,3 +1,6 @@
+---
+title: Introduction
+---
 
 # Introduction
 ## What is Rendora?
