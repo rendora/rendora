@@ -126,3 +126,10 @@ filters:
 3. **Performance**: In addition to caching, Rendora is able to skip fetching and rendering unnecessary content CSS, fonts, images, etc... which can substantially reduce the intial DOM load latency.
 4. **Development**: Rendertron is developed in Node.js while Rendora is a single binary written in Golang.
 5. **API and Metrics**: Rendora provides Prometheus metrics about SSR latencies and number of SSR'ed and total requests. Furthermore, Rendora provides a JSON rendering endpoint that contains body, status and headers of the SSR response by the headless Chrome instance.
+
+
+
+
+Follow rendora news and releases on [Twitter](https://twitter.com/_rendora)
+
+George Badawi - 2018
