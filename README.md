@@ -92,10 +92,42 @@ Configuration is discussed in detail in docs [here](https://rendora.co/docs/conf
 ### A minimal config file example
 ```yaml
 target:
+    url: "http://127.0.0.1" # this is the base url addressed by the headless Chrome instance, it can be simply your website url
+backend:
+    url: "http://127.0.0.1:8000" # your backend server url
+
+filters:
+    userAgent: # .i.e. only whitelist useragents containing the keywords "bot", "slurp", "bing" or "crawler"
+        defaultPolicy: blacklist
+        exceptions:
+            keywords:
+                - bot
+                - slurp
+                - bing
+                - crawler
+```
+
+### A more customized config file
+
+```yaml
+listen:
+    address: 0.0.0.0
+    port: 3001
+cache:
+    type: redis
+    timeout: 6000
+    redis:
+        address: localhost:6379
+target:
     url: "http://127.0.0.1" 
 backend:
     url: "http://127.0.0.1:8000"
-
+headless:
+    waitAfterDOMLoad: 0
+    internal:
+      url: http://localhost:9222
+output:
+    minify: true
 filters:
     userAgent:
         defaultPolicy: blacklist
@@ -105,6 +137,11 @@ filters:
                 - slurp
                 - bing
                 - crawler
+    paths:
+        defaultPolicy: whitelist
+        exceptions:
+            prefix:
+             - /users/
 ```
 
 
@@ -127,6 +164,10 @@ filters:
 4. **Development**: Rendertron is developed in Node.js while Rendora is a single binary written in Golang.
 5. **API and Metrics**: Rendora provides Prometheus metrics about SSR latencies and number of SSR'ed and total requests. Furthermore, Rendora provides a JSON rendering endpoint that contains body, status and headers of the SSR response by the headless Chrome instance.
 
+
+## Acknowledgements
+
+Many thanks to [@mafredri](https://github.com/mafredri) for his effort to create [cdp](https://github.com/mafredri/cdp), a great Chrome DevTools Protocols client in Golang.
 
 
 
