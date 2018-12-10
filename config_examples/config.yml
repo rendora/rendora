@@ -23,9 +23,12 @@ output:
     minify: true
 
 filters:
-    preset: all
     userAgent:
-        defaultPolicy: whitelist
+        defaultPolicy: blacklist
+        exceptions:
+            keywords:
+                - bingbot
+                - yandex
     paths:
         defaultPolicy: whitelist
         exceptions:
