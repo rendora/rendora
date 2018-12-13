@@ -60,6 +60,7 @@ you can build and run Rendora from source code, (**NOTE**: please read the [conf
 ``` bash
 git clone https://github.com/rendora/rendora
 cd rendora/rendora
+# USE ONLY GO V1.11+ SINCE GO MODULES IS NEEDED
 go build
 ./rendora --config CONFIG_FILE.yaml
 ```
