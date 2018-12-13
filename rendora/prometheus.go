@@ -2,7 +2,7 @@ package main
 
 import "github.com/prometheus/client_golang/prometheus"
 
-//Metrics provides various Promethues metrics
+//Metrics provides various Prometheus metrics
 type Metrics struct {
 	Duration       prometheus.Histogram
 	CountTotal     prometheus.Counter
