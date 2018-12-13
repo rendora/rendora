@@ -105,6 +105,9 @@ func getResponse(uri string) (*HeadlessResponse, error) {
 		m.AddFunc("text/html", html.Minify)
 		m.AddFunc("text/css", css.Minify)
 		dt.Content, err = m.String("text/html", dt.Content)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	defer Rendora.Cache.Set(cKey, dt)
