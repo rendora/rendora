@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -55,7 +54,7 @@ func getHeadlessExternal(uri string) (*HeadlessResponse, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return nil, errors.New(fmt.Sprintln("Unsuccessful result with code:  %d", resp.StatusCode))
+		return nil, fmt.Errorf("unsuccessful result with code:  %d", resp.StatusCode)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
