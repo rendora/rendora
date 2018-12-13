@@ -5,6 +5,8 @@
 <img src="docs/pics/logo_200.png" alt="Rendora" title="Rendora" />
 </p>
 
+[![Go Report Card](https://goreportcard.com/badge/rendora/rendora)](http://goreportcard.com/report/rendora/rendora)
+
 Rendora is a dynamic renderer to provide zero-configuration server-side rendering mainly to web crawlers in order to effortlessly improve SEO for websites developed in modern Javascript frameworks such as React.js, Vue.js, Angular.js, etc... Rendora works totally independently of your frontend and backend stacks
 
 <p align="center">
