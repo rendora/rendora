@@ -1,0 +1,9 @@
+version: 2
+jobs:
+    build:
+        working_directory: ~/rendora
+        docker:
+            - image: circleci/golang:1.11
+        steps:
+            - checkout
+            - run: cd rendora && go build
