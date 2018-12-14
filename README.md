@@ -7,7 +7,7 @@
 
 [![Go Report Card](https://goreportcard.com/badge/rendora/rendora)](http://goreportcard.com/report/rendora/rendora)
 [![CircleCI](https://circleci.com/gh/rendora/rendora/tree/master.svg?style=svg)](https://circleci.com/gh/rendora/rendora/tree/master)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/rendora/rendora/blob/master/LICENSE)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/rendora/rendora/blob/master/LICENSE) [![Join the chat at https://gitter.im/rendora/rendora](https://badges.gitter.im/rendora/rendora.svg)](https://gitter.im/rendora/rendora?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Rendora is a dynamic renderer to provide zero-configuration server-side rendering mainly to web crawlers in order to effortlessly improve SEO for websites developed in modern Javascript frameworks such as React.js, Vue.js, Angular.js, etc... Rendora works totally independently of your frontend and backend stacks
 
