@@ -47,7 +47,7 @@ Dynamic rendering means that the server provides server-side rendered HTML to we
 
 ## How does Rendora work?
 
-For every request coming from the frontend server or the outside world, there are some checks or filters that are tested against the headers and/or paths according to Rendora's configuration file to determine whether Rendora should just pass the initial HTML returned from the backend server or use headless Chrome to provide a server-side rendered HTML. To be more specific, for every request there are 2 paths:
+Rendora is listening by default to the port `3001` but can be changed using the config file; for every request coming from the frontend server or the outside world, there are some checks or filters that are tested against the headers and/or paths according to Rendora's configuration file to determine whether Rendora should just pass the initial HTML returned from the backend server or use headless Chrome to provide a server-side rendered HTML. To be more specific, for every request there are 2 paths:
 
 1. If the request is whitelisted as a candidate for SSR (i.e. a GET request that passes all user agent and path filters), Rendora instructs the headless Chrome instance to request the corresponding page, render it and return the response which contains the final server-side rendered HTML. You usually want to whitelist only web crawlers like GoogleBot, BingBot, etc...
 
