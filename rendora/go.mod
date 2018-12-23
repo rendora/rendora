@@ -23,6 +23,7 @@ require (
 	github.com/prometheus/common v0.0.0-20181126121408-4724e9255275 // indirect
 	github.com/prometheus/procfs v0.0.0-20181126161756-619930b0b471 // indirect
 	github.com/spf13/cast v1.3.0 // indirect
+	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.2.1
 	github.com/tdewolff/minify v2.3.6+incompatible // indirect

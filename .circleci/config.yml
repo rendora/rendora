@@ -6,4 +6,4 @@ jobs:
             - image: circleci/golang:1.11
         steps:
             - checkout
-            - run: cd rendora && go build
+            - run: make build

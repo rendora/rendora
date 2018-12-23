@@ -1,10 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/url"
+	"runtime"
 
 	"github.com/asaskevich/govalidator"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
@@ -100,15 +103,44 @@ type RendoraConfig struct {
 	}
 }
 
+var rootCmd *cobra.Command
+var cfgFile string
+
+func initCobra() {
+
+	rootCmd = &cobra.Command{
+		Use:  "rendora",
+		Long: `dynamic server-side rendering using headless Chrome to effortlessly solve the SEO problem for modern javascript websites`,
+		Run: func(cmd *cobra.Command, args []string) {
+			InitConfig()
+			execMain()
+		},
+	}
+
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file")
+
+	var versionCmd = &cobra.Command{
+		Use:   "version",
+		Short: "Print the version number of rendora",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("Rendora Version: ", VERSION)
+			fmt.Println("Go Version: ", runtime.Version())
+		},
+	}
+
+	rootCmd.AddCommand(versionCmd)
+
+}
+
 // InitConfig initializes the application configuration
 func InitConfig() {
 
-	if *defaultConfigFile == "" {
+	if cfgFile == "" {
 		viper.SetConfigName("config")
 		viper.AddConfigPath(".")
 		viper.AddConfigPath("/etc/rendora")
 	} else {
-		viper.SetConfigFile(*defaultConfigFile)
+		viper.SetConfigFile(cfgFile)
 	}
 
 	viper.SetDefault("debug", false)
@@ -195,6 +227,9 @@ type rendora struct {
 	HMode      HeadlessMode
 	M          *Metrics
 }
+
+// VERSION shows Rendora's version
+var VERSION string
 
 //Rendora contains global information, most importantly the configuration
 var Rendora = rendora{

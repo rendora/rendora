@@ -18,11 +18,12 @@ import (
 	"log"
 	"net/http"
 	"net/http/httputil"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/spf13/pflag"
+	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -105,15 +106,12 @@ var (
 	g errgroup.Group
 )
 
-var defaultConfigFile *string
-
 func init() {
-	defaultConfigFile = pflag.StringP("config", "c", "", "set config file")
+	cobra.OnInitialize()
+	initCobra()
 }
 
-func main() {
-	pflag.Parse()
-	InitConfig()
+func execMain() {
 
 	if Rendora.C.Debug == false {
 		gin.SetMode(gin.ReleaseMode)
@@ -131,5 +129,12 @@ func main() {
 
 	if err := g.Wait(); err != nil {
 		log.Fatal(err)
+	}
+}
+
+func main() {
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }
