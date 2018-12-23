@@ -45,6 +45,7 @@ type RendoraConfig struct {
 		URL         string   `valid:"requrl"`
 		AuthToken   string   `mapstructure:"authToken"`
 		BlockedURLs []string `mapstructure:"blockedURLs"`
+		Timeout     uint16   `valid:"range(5|30)"`
 		Internal    struct {
 			URL string `valid:"url"`
 		}
@@ -154,6 +155,7 @@ func InitConfig() {
 	viper.SetDefault("output.minify", false)
 	viper.SetDefault("headless.mode", "default")
 	viper.SetDefault("headless.waitAfterDOMLoad", 0)
+	viper.SetDefault("headless.timeout", 15)
 	viper.SetDefault("headless.internal.url", "http://localhost:9222")
 	viper.SetDefault("filters.useragent.defaultPolicy", "blacklist")
 	viper.SetDefault("filters.paths.defaultPolicy", "whitelist")

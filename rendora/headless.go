@@ -158,7 +158,7 @@ func (c *HeadlessClient) GoTo(uri string) (*HeadlessResponse, error) {
 	c.Mtx.Lock()
 	defer c.Mtx.Unlock()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(Rendora.C.Headless.Timeout)*time.Second)
 	defer cancel()
 
 	timeStart := time.Now()

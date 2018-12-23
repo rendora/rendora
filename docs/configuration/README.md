@@ -42,6 +42,8 @@ Also note that almost all config variables are optional. What is required curren
 - `headless` *(optional)*, this contains the config related to the headless Chrome instance controlled by Rendora
     - `waitAfterDOMLoad` *(optional)*, timeout in milliseconds to wait after the initial DOM load event, you may only what to use it for async apps where you start fetching content after the intial load
         - default: `0`
+    - `timeout` *(optional)*, this is the timeout in **seconds** for Rendora to wait until the SSR'ed HTML content is fetched from the headless Chrome instance. If, due to some unexpected problem, the timeout is exceeded (e.g. networking issue, headless Chrome crash, etc...), Rendora cancels the operation and returns error with status code of 500 to the client.
+      - default: `15`
     - `internal`
         - `url` *(optional)*, this is the address of the headless Chrome instance
             - default: `http://localhost:9222`
