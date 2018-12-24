@@ -1,2 +1,2 @@
-rendora/rendora
-rendora/config.yml
+cmd/rendora/rendora
+cmd/rendora/conf.*
