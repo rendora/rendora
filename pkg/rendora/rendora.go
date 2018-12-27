@@ -26,9 +26,9 @@ import (
 
 func (R *Rendora) getProxy(c *gin.Context) {
 	director := func(req *http.Request) {
-		req.Host = R.BackendURL.Host
-		req.URL.Scheme = R.BackendURL.Scheme
-		req.URL.Host = R.BackendURL.Host
+		req.Host = R.backendURL.Host
+		req.URL.Scheme = R.backendURL.Scheme
+		req.URL.Host = R.backendURL.Host
 		req.RequestURI = c.Request.RequestURI
 	}
 	proxy := &httputil.ReverseProxy{Director: director}
@@ -54,7 +54,7 @@ func (R *Rendora) middleware() gin.HandlerFunc {
 		}
 
 		if R.c.Server.Enable {
-			R.M.CountTotal.Inc()
+			R.metrics.CountTotal.Inc()
 		}
 	}
 }
@@ -87,7 +87,7 @@ func (R *Rendora) initRendoraServer() *http.Server {
 	})
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
-	r.POST("/render", R.APIRender)
+	r.POST("/render", R.apiRender)
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", R.c.Server.Listen.Address, R.c.Server.Listen.Port),
@@ -103,6 +103,7 @@ var (
 	g errgroup.Group
 )
 
+//Run starts Rendora proxy nd API (if enabled) servers
 func (R *Rendora) Run() error {
 
 	if R.c.Debug == false {
@@ -125,12 +126,14 @@ func (R *Rendora) Run() error {
 	return nil
 }
 
+//New creates a new Rendora instance
 func New(cfgFile string) (*Rendora, error) {
 	rendora := &Rendora{
-		c: &RendoraConfig{},
-		M: &Metrics{},
+		c:       &rendoraConfig{},
+		metrics: &metrics{},
+		cfgFile: cfgFile,
 	}
-	err := rendora.initConfig(cfgFile)
+	err := rendora.initConfig()
 	if err != nil {
 		return nil, err
 	}

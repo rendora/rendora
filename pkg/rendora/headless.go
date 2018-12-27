@@ -20,8 +20,8 @@ import (
 
 var defaultBlockedURLs []string
 
-//HeadlessClient contains the info of the headless client, most importantly the cdp.Client
-type HeadlessClient struct {
+//headlessClient contains the info of the headless client, most importantly the cdp.Client
+type headlessClient struct {
 	RPCConn *rpcc.Conn
 	C       *cdp.Client
 	Mtx     *sync.Mutex
@@ -80,8 +80,8 @@ func checkHeadless(arg string) error {
 }
 
 //NewHeadlessClient creates HeadlessClient
-func (R *Rendora) NewHeadlessClient() (*HeadlessClient, error) {
-	ret := &HeadlessClient{
+func (R *Rendora) newHeadlessClient() error {
+	ret := &headlessClient{
 		Mtx: &sync.Mutex{},
 		rendora: R,
 	}
@@ -89,13 +89,13 @@ func (R *Rendora) NewHeadlessClient() (*HeadlessClient, error) {
 
 	err := checkHeadless(R.c.Headless.Internal.URL)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// looks like cdp doesn't resolve hostnames automatically, may lead to problems when used with container networks
 	resolvedURL, err := resolveURLHostname(R.c.Headless.Internal.URL)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	devt := devtool.New(resolvedURL)
@@ -103,30 +103,30 @@ func (R *Rendora) NewHeadlessClient() (*HeadlessClient, error) {
 	if err != nil {
 		pt, err = devt.Create(ctx)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
 	ret.RPCConn, err = rpcc.DialContext(ctx, pt.WebSocketDebuggerURL)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	ret.C = cdp.NewClient(ret.RPCConn)
 
 	domContent, err := ret.C.Page.DOMContentEventFired(ctx)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer domContent.Close()
 
 	if err = ret.C.Page.Enable(ctx); err != nil {
-		return nil, err
+		return err
 	}
 
 	err = ret.C.Network.Enable(ctx, nil)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	headers := map[string]string{
@@ -135,12 +135,12 @@ func (R *Rendora) NewHeadlessClient() (*HeadlessClient, error) {
 
 	headersStr, err := json.Marshal(headers)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	err = ret.C.Network.SetExtraHTTPHeaders(ctx, network.NewSetExtraHTTPHeadersArgs(headersStr))
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	blockedURLs := network.NewSetBlockedURLsArgs(defaultBlockedURLs)
@@ -148,14 +148,16 @@ func (R *Rendora) NewHeadlessClient() (*HeadlessClient, error) {
 	err = ret.C.Network.SetBlockedURLs(ctx, blockedURLs)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return ret, nil
+	R.h = ret
+
+	return nil
 }
 
 //GoTo navigates to the url, fetches the DOM and returns HeadlessResponse
-func (c *HeadlessClient) GoTo(uri string) (*HeadlessResponse, error) {
+func (c *headlessClient) getResponse(uri string) (*HeadlessResponse, error) {
 
 	c.Mtx.Lock()
 	defer c.Mtx.Unlock()
@@ -212,7 +214,7 @@ func (c *HeadlessClient) GoTo(uri string) (*HeadlessResponse, error) {
 
 	if c.rendora.c.Server.Enable {
 		
-		c.rendora.M.Duration.Observe(elapsed)
+		c.rendora.metrics.Duration.Observe(elapsed)
 	}
 
 	responseHeaders := make(map[string]string)

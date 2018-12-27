@@ -9,8 +9,8 @@ import (
 	cache "github.com/patrickmn/go-cache"
 )
 
-//CacheStore represents the cache store
-type CacheStore struct {
+//cacheStore represents the cache store
+type cacheStore struct {
 	DefaultTimeout time.Duration
 	Type           uint8
 	redis          *redis.Client
@@ -26,7 +26,7 @@ const (
 
 //InitCacheStore initializes the cache store
 func (R *Rendora) initCacheStore() {
-	cs := &CacheStore{
+	cs := &cacheStore{
 		DefaultTimeout: time.Duration(R.c.Cache.Timeout) * time.Second,
 		rendora:        R,
 	}
@@ -48,11 +48,11 @@ func (R *Rendora) initCacheStore() {
 		cs.Type = typeLocal
 	}
 
-	R.Cache = cs
+	R.cache = cs
 }
 
 //Set stores HeadlessResponse in the cache with the key cKey (i.e. request path)
-func (c *CacheStore) Set(cKey string, d *HeadlessResponse) error {
+func (c *cacheStore) set(cKey string, d *HeadlessResponse) error {
 
 	switch c.Type {
 	case typeLocal:
@@ -76,14 +76,14 @@ func (c *CacheStore) Set(cKey string, d *HeadlessResponse) error {
 }
 
 //Get gets HeadlessResponse from the cache with the key cKey (i.e. request path)
-func (c *CacheStore) Get(cKey string) (*HeadlessResponse, bool, error) {
+func (c *cacheStore) get(cKey string) (*HeadlessResponse, bool, error) {
 
 	switch c.Type {
 	case typeLocal:
 		if x, found := c.gocache.Get(cKey); found {
 			foo := x.(*HeadlessResponse)
 			if c.rendora.c.Server.Enable {
-				c.rendora.M.CountSSRCached.Inc()
+				c.rendora.metrics.CountSSRCached.Inc()
 			}
 			return foo, true, nil
 		}
@@ -98,7 +98,7 @@ func (c *CacheStore) Get(cKey string) (*HeadlessResponse, bool, error) {
 			var dt HeadlessResponse
 			json.Unmarshal([]byte(val), &dt)
 			if c.rendora.c.Server.Enable {
-				c.rendora.M.CountSSRCached.Inc()
+				c.rendora.metrics.CountSSRCached.Inc()
 			}
 			return &dt, true, nil
 		}

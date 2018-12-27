@@ -2,16 +2,16 @@ package rendora
 
 import "github.com/prometheus/client_golang/prometheus"
 
-//Metrics provides various Prometheus metrics
-type Metrics struct {
+//metrics provides various Prometheus metrics
+type metrics struct {
 	Duration       prometheus.Histogram
 	CountTotal     prometheus.Counter
 	CountSSR       prometheus.Counter
 	CountSSRCached prometheus.Counter
 }
 
-func initPrometheus() *Metrics {
-	ret := &Metrics{}
+func (R *Rendora) initPrometheus() {
+	ret := &metrics{}
 	ret.CountTotal = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "rendora_requests_total",
 		Help: "Total Requests",
@@ -36,5 +36,5 @@ func initPrometheus() *Metrics {
 	prometheus.MustRegister(ret.CountTotal)
 	prometheus.MustRegister(ret.CountSSR)
 	prometheus.MustRegister(ret.Duration)
-	return ret
+	R.metrics = ret
 }

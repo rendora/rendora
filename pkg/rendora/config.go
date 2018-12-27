@@ -8,21 +8,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-// HeadlessMode represents headless modes, currently only internal is supported
-type HeadlessMode uint16
-
-//HeadlessMode types
-const (
-	HeadlessModeInternal HeadlessMode = 0
-	HeadlessModeExternal HeadlessMode = 1
-)
-
 type backend struct {
 	URL string
 }
 
-//RendoraConfig represents the global configuration of Rendora
-type RendoraConfig struct {
+//rendoraConfig represents the global configuration of Rendora
+type rendoraConfig struct {
 	HeadlessMode string `mapstructure:"headlessMode" valid:"in(default|internal|external)"`
 	Debug        bool   `mapstructure:"debug"`
 	Listen       struct {
@@ -102,14 +93,14 @@ type RendoraConfig struct {
 }
 
 // InitConfig initializes the application configuration
-func (R *Rendora) initConfig(cfgFile string) error {
+func (R *Rendora) initConfig() error {
 
-	if cfgFile == "" {
+	if R.cfgFile == "" {
 		viper.SetConfigName("config")
 		viper.AddConfigPath(".")
 		viper.AddConfigPath("/etc/rendora")
 	} else {
-		viper.SetConfigFile(cfgFile)
+		viper.SetConfigFile(R.cfgFile)
 	}
 
 	viper.SetDefault("debug", false)
@@ -159,14 +150,14 @@ func (R *Rendora) initConfig(cfgFile string) error {
 
 	defaultBlockedURLs = R.c.Headless.BlockedURLs
 
-	R.BackendURL, err = url.Parse(R.c.Backend.URL)
+	R.backendURL, err = url.Parse(R.c.Backend.URL)
 	if err != nil {
 		return err
 	}
 
 	log.Println("Configuration loaded")
 
-	R.H, err = R.NewHeadlessClient()
+	err = R.newHeadlessClient()
 
 	if err != nil {
 		return err
@@ -174,33 +165,20 @@ func (R *Rendora) initConfig(cfgFile string) error {
 
 	log.Println("Connected to headless Chrome")
 
-	switch R.c.Headless.Mode {
-	case "external":
-		R.HMode = HeadlessModeExternal
-	case "internal":
-		R.HMode = HeadlessModeInternal
-	default:
-		R.HMode = HeadlessModeInternal
-	}
-
 	if R.c.Server.Enable {
-		R.M = initPrometheus()
+		R.initPrometheus()
 	}
 
 	return nil
 
 }
 
+//Rendora contains the main structure instance
 type Rendora struct {
-	c          *RendoraConfig
-	Cache      *CacheStore
-	BackendURL *url.URL
-	H          *HeadlessClient
-	HMode      HeadlessMode
-	M          *Metrics
+	c          *rendoraConfig
+	cache      *cacheStore
+	backendURL *url.URL
+	h          *headlessClient
+	metrics    *metrics
+	cfgFile    string
 }
-
-// VERSION shows Rendora's version
-var VERSION string
-
-//Rendora contains global information, most importantly the configuration

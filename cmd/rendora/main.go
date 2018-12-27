@@ -14,6 +14,7 @@ import (
 var VERSION string
 
 func main() {
+
 	cobra.OnInitialize()
 	var cfgFile string
 
@@ -26,6 +27,7 @@ func main() {
 				log.Fatal(err)
 			}
 			Rendora.Run()
+
 		},
 	}
 

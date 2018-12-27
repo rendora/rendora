@@ -11,7 +11,7 @@ type apiRenderArgs struct {
 }
 
 // APIRender provides the http client with HeadlessResponse
-func (R *Rendora) APIRender(c *gin.Context) {
+func (R *Rendora) apiRender(c *gin.Context) {
 
 	var args apiRenderArgs
 	if err := c.ShouldBindJSON(&args); err != nil {

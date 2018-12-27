@@ -73,12 +73,12 @@ func getHeadlessExternal(uri string) (*HeadlessResponse, error) {
 var targetURL string
 
 func (R *Rendora) getHeadless(uri string) (*HeadlessResponse, error) {
-	return R.H.GoTo(R.c.Target.URL + uri)
+	return R.h.getResponse(R.c.Target.URL + uri)
 }
 
 func (R *Rendora) getResponse(uri string) (*HeadlessResponse, error) {
 	cKey := R.c.Cache.Redis.KeyPrefix + ":" + uri
-	resp, exists, err := R.Cache.Get(cKey)
+	resp, exists, err := R.cache.get(cKey)
 
 	if err != nil {
 		log.Println(err)
@@ -102,7 +102,7 @@ func (R *Rendora) getResponse(uri string) (*HeadlessResponse, error) {
 		}
 	}
 
-	defer R.Cache.Set(cKey, dt)
+	defer R.cache.set(cKey, dt)
 	return dt, nil
 }
 
@@ -123,6 +123,7 @@ func (R *Rendora) getSSR(c *gin.Context) {
 	c.String(resp.Status, resp.Content)
 
 	if R.c.Server.Enable {
-		R.M.CountSSR.Inc()
+		R.metrics.CountSSR.Inc()
 	}
+
 }
