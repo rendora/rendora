@@ -7,6 +7,7 @@
 
 [![Go Report Card](https://goreportcard.com/badge/rendora/rendora)](http://goreportcard.com/report/rendora/rendora)
 [![CircleCI](https://circleci.com/gh/rendora/rendora/tree/master.svg?style=svg)](https://circleci.com/gh/rendora/rendora/tree/master)
+[![GoDoc](https://godoc.org/github.com/rendora/rendora?status.svg)](https://godoc.org/github.com/rendora/rendora)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/rendora/rendora/blob/master/LICENSE)
 [![Join the chat at https://discord.gg/6yyErk8](https://img.shields.io/badge/chat-on%20discord-7289da.svg)](https://discord.gg/6yyErk8)
 
