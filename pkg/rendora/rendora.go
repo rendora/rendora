@@ -47,7 +47,7 @@ func (R *Rendora) middleware() gin.HandlerFunc {
 			return
 		}
 
-		if R.IsWhitelisted(c) {
+		if R.isWhitelisted(c) {
 			R.getSSR(c)
 		} else {
 			R.getProxy(c)
