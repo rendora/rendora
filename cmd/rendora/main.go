@@ -26,7 +26,11 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			Rendora.Run()
+			err = Rendora.Run()
+
+			if err != nil {
+				log.Fatal(err)
+			}
 
 		},
 	}
