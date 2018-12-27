@@ -1,9 +1,6 @@
-package main
+package rendora
 
 import (
-	"bytes"
-	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -28,6 +25,7 @@ type HeadlessResponse struct {
 	Latency float64           `json:"latency"`
 }
 
+/*
 func getHeadlessExternal(uri string) (*HeadlessResponse, error) {
 	client := &http.Client{}
 	bd := reqBody{
@@ -70,22 +68,17 @@ func getHeadlessExternal(uri string) (*HeadlessResponse, error) {
 	return &ret, nil
 }
 
+*/
+
 var targetURL string
 
-func getHeadless(uri string) (*HeadlessResponse, error) {
-	switch Rendora.HMode {
-	case HeadlessModeExternal:
-		return getHeadlessExternal(uri)
-	case HeadlessModeInternal:
-		fallthrough
-	default:
-		return Rendora.H.GoTo(Rendora.C.Target.URL + uri)
-	}
+func (R *Rendora) getHeadless(uri string) (*HeadlessResponse, error) {
+	return R.H.GoTo(R.c.Target.URL + uri)
 }
 
-func getResponse(uri string) (*HeadlessResponse, error) {
-	cKey := Rendora.C.Cache.Redis.KeyPrefix + ":" + uri
-	resp, exists, err := Rendora.Cache.Get(cKey)
+func (R *Rendora) getResponse(uri string) (*HeadlessResponse, error) {
+	cKey := R.c.Cache.Redis.KeyPrefix + ":" + uri
+	resp, exists, err := R.Cache.Get(cKey)
 
 	if err != nil {
 		log.Println(err)
@@ -95,11 +88,11 @@ func getResponse(uri string) (*HeadlessResponse, error) {
 		return resp, nil
 	}
 
-	dt, err := getHeadless(uri)
+	dt, err := R.getHeadless(uri)
 	if err != nil {
 		return nil, err
 	}
-	if Rendora.C.Output.Minify {
+	if R.c.Output.Minify {
 		m := minify.New()
 		m.AddFunc("text/html", html.Minify)
 		m.AddFunc("text/css", css.Minify)
@@ -109,13 +102,13 @@ func getResponse(uri string) (*HeadlessResponse, error) {
 		}
 	}
 
-	defer Rendora.Cache.Set(cKey, dt)
+	defer R.Cache.Set(cKey, dt)
 	return dt, nil
 }
 
-func getSSR(c *gin.Context) {
+func (R *Rendora) getSSR(c *gin.Context) {
 
-	resp, err := getResponse(c.Request.RequestURI)
+	resp, err := R.getResponse(c.Request.RequestURI)
 	if err != nil {
 		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
@@ -129,7 +122,7 @@ func getSSR(c *gin.Context) {
 	c.Header("Content-Type", contentHdr)
 	c.String(resp.Status, resp.Content)
 
-	if Rendora.C.Server.Enable {
-		Rendora.M.CountSSR.Inc()
+	if R.c.Server.Enable {
+		R.M.CountSSR.Inc()
 	}
 }

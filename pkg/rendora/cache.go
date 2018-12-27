@@ -1,4 +1,4 @@
-package main
+package rendora
 
 import (
 	"bytes"
@@ -15,6 +15,7 @@ type CacheStore struct {
 	Type           uint8
 	redis          *redis.Client
 	gocache        *cache.Cache
+	rendora        *Rendora
 }
 
 const (
@@ -24,21 +25,22 @@ const (
 )
 
 //InitCacheStore initializes the cache store
-func InitCacheStore() *CacheStore {
+func (R *Rendora) initCacheStore() {
 	cs := &CacheStore{
-		DefaultTimeout: time.Duration(Rendora.C.Cache.Timeout) * time.Second,
+		DefaultTimeout: time.Duration(R.c.Cache.Timeout) * time.Second,
+		rendora:        R,
 	}
 
-	switch Rendora.C.Cache.Type {
+	switch R.c.Cache.Type {
 	case "local":
 		cs.Type = typeLocal
 		cs.gocache = cache.New(cs.DefaultTimeout, 4*time.Minute)
 	case "redis":
 		cs.Type = typeRedis
 		cs.redis = redis.NewClient(&redis.Options{
-			Addr:     Rendora.C.Cache.Redis.Address,
-			Password: Rendora.C.Cache.Redis.Password,
-			DB:       Rendora.C.Cache.Redis.DB,
+			Addr:     R.c.Cache.Redis.Address,
+			Password: R.c.Cache.Redis.Password,
+			DB:       R.c.Cache.Redis.DB,
 		})
 	case "none":
 		cs.Type = typeNone
@@ -46,7 +48,7 @@ func InitCacheStore() *CacheStore {
 		cs.Type = typeLocal
 	}
 
-	return cs
+	R.Cache = cs
 }
 
 //Set stores HeadlessResponse in the cache with the key cKey (i.e. request path)
@@ -80,8 +82,8 @@ func (c *CacheStore) Get(cKey string) (*HeadlessResponse, bool, error) {
 	case typeLocal:
 		if x, found := c.gocache.Get(cKey); found {
 			foo := x.(*HeadlessResponse)
-			if Rendora.C.Server.Enable {
-				Rendora.M.CountSSRCached.Inc()
+			if c.rendora.c.Server.Enable {
+				c.rendora.M.CountSSRCached.Inc()
 			}
 			return foo, true, nil
 		}
@@ -95,8 +97,8 @@ func (c *CacheStore) Get(cKey string) (*HeadlessResponse, bool, error) {
 		} else {
 			var dt HeadlessResponse
 			json.Unmarshal([]byte(val), &dt)
-			if Rendora.C.Server.Enable {
-				Rendora.M.CountSSRCached.Inc()
+			if c.rendora.c.Server.Enable {
+				c.rendora.M.CountSSRCached.Inc()
 			}
 			return &dt, true, nil
 		}

@@ -1,4 +1,4 @@
-package main
+package rendora
 
 import (
 	"net/http"
@@ -11,7 +11,7 @@ type apiRenderArgs struct {
 }
 
 // APIRender provides the http client with HeadlessResponse
-func APIRender(c *gin.Context) {
+func (R *Rendora) APIRender(c *gin.Context) {
 
 	var args apiRenderArgs
 	if err := c.ShouldBindJSON(&args); err != nil {
@@ -19,7 +19,7 @@ func APIRender(c *gin.Context) {
 		return
 	}
 
-	resp, err := getResponse(args.URI)
+	resp, err := R.getResponse(args.URI)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

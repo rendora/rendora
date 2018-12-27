@@ -1,13 +1,10 @@
-package main
+package rendora
 
 import (
-	"fmt"
 	"log"
 	"net/url"
-	"runtime"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
@@ -104,37 +101,8 @@ type RendoraConfig struct {
 	}
 }
 
-var rootCmd *cobra.Command
-var cfgFile string
-
-func initCobra() {
-
-	rootCmd = &cobra.Command{
-		Use:  "rendora",
-		Long: `dynamic server-side rendering using headless Chrome to effortlessly solve the SEO problem for modern javascript websites`,
-		Run: func(cmd *cobra.Command, args []string) {
-			InitConfig()
-			execMain()
-		},
-	}
-
-	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file")
-
-	var versionCmd = &cobra.Command{
-		Use:   "version",
-		Short: "Print the version number of rendora",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Rendora Version: ", VERSION)
-			fmt.Println("Go Version: ", runtime.Version())
-		},
-	}
-
-	rootCmd.AddCommand(versionCmd)
-
-}
-
 // InitConfig initializes the application configuration
-func InitConfig() {
+func (R *Rendora) initConfig(cfgFile string) error {
 
 	if cfgFile == "" {
 		viper.SetConfigName("config")
@@ -173,56 +141,58 @@ func InitConfig() {
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		log.Fatal("error: " + err.Error())
+		return err
 	}
 
-	err = viper.Unmarshal(Rendora.C)
+	err = viper.Unmarshal(R.c)
 
 	if err != nil {
-		log.Fatal("error: " + err.Error())
+		return err
 	}
 
-	_, err = govalidator.ValidateStruct(Rendora.C)
+	_, err = govalidator.ValidateStruct(R.c)
 	if err != nil {
-		log.Fatal("error: " + err.Error())
+		return err
 	}
 
-	Rendora.Cache = InitCacheStore()
+	R.initCacheStore()
 
-	defaultBlockedURLs = Rendora.C.Headless.BlockedURLs
+	defaultBlockedURLs = R.c.Headless.BlockedURLs
 
-	Rendora.BackendURL, err = url.Parse(Rendora.C.Backend.URL)
+	R.BackendURL, err = url.Parse(R.c.Backend.URL)
 	if err != nil {
-		log.Fatal("error: " + err.Error())
+		return err
 	}
 
 	log.Println("Configuration loaded")
 
-	Rendora.H, err = NewHeadlessClient()
+	R.H, err = R.NewHeadlessClient()
 
 	if err != nil {
-		log.Fatal("error: " + err.Error())
+		return err
 	}
 
 	log.Println("Connected to headless Chrome")
 
-	switch Rendora.C.Headless.Mode {
+	switch R.c.Headless.Mode {
 	case "external":
-		Rendora.HMode = HeadlessModeExternal
+		R.HMode = HeadlessModeExternal
 	case "internal":
-		Rendora.HMode = HeadlessModeInternal
+		R.HMode = HeadlessModeInternal
 	default:
-		Rendora.HMode = HeadlessModeInternal
+		R.HMode = HeadlessModeInternal
 	}
 
-	if Rendora.C.Server.Enable {
-		Rendora.M = initPrometheus()
+	if R.c.Server.Enable {
+		R.M = initPrometheus()
 	}
+
+	return nil
 
 }
 
-type rendora struct {
-	C          *RendoraConfig
+type Rendora struct {
+	c          *RendoraConfig
 	Cache      *CacheStore
 	BackendURL *url.URL
 	H          *HeadlessClient
@@ -234,7 +204,3 @@ type rendora struct {
 var VERSION string
 
 //Rendora contains global information, most importantly the configuration
-var Rendora = rendora{
-	C: &RendoraConfig{},
-	M: &Metrics{},
-}

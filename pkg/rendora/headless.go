@@ -1,4 +1,4 @@
-package main
+package rendora
 
 import (
 	"context"
@@ -25,6 +25,7 @@ type HeadlessClient struct {
 	RPCConn *rpcc.Conn
 	C       *cdp.Client
 	Mtx     *sync.Mutex
+	rendora *Rendora
 }
 
 func resolveURLHostname(arg string) (string, error) {
@@ -79,19 +80,20 @@ func checkHeadless(arg string) error {
 }
 
 //NewHeadlessClient creates HeadlessClient
-func NewHeadlessClient() (*HeadlessClient, error) {
+func (R *Rendora) NewHeadlessClient() (*HeadlessClient, error) {
 	ret := &HeadlessClient{
 		Mtx: &sync.Mutex{},
+		rendora: R,
 	}
 	ctx := context.Background()
 
-	err := checkHeadless(Rendora.C.Headless.Internal.URL)
+	err := checkHeadless(R.c.Headless.Internal.URL)
 	if err != nil {
 		return nil, err
 	}
 
 	// looks like cdp doesn't resolve hostnames automatically, may lead to problems when used with container networks
-	resolvedURL, err := resolveURLHostname(Rendora.C.Headless.Internal.URL)
+	resolvedURL, err := resolveURLHostname(R.c.Headless.Internal.URL)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +160,7 @@ func (c *HeadlessClient) GoTo(uri string) (*HeadlessResponse, error) {
 	c.Mtx.Lock()
 	defer c.Mtx.Unlock()
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(Rendora.C.Headless.Timeout)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.rendora.c.Headless.Timeout)*time.Second)
 	defer cancel()
 
 	timeStart := time.Now()
@@ -185,7 +187,7 @@ func (c *HeadlessClient) GoTo(uri string) (*HeadlessResponse, error) {
 	}
 	defer domContent.Close()
 
-	waitUntil := Rendora.C.Headless.WaitAfterDOMLoad
+	waitUntil := c.rendora.c.Headless.WaitAfterDOMLoad
 	if waitUntil > 0 {
 		time.Sleep(time.Duration(waitUntil) * time.Millisecond)
 	}
@@ -208,9 +210,9 @@ func (c *HeadlessClient) GoTo(uri string) (*HeadlessResponse, error) {
 
 	elapsed := float64(time.Since(timeStart)) / float64(time.Duration(1*time.Millisecond))
 
-	if Rendora.C.Server.Enable {
+	if c.rendora.c.Server.Enable {
 		
-		Rendora.M.Duration.Observe(elapsed)
+		c.rendora.M.Duration.Observe(elapsed)
 	}
 
 	responseHeaders := make(map[string]string)
