@@ -64,6 +64,13 @@ If Chrome/Chromium is installed in your system, you can run it using
 ``` bash
 google-chrome --headless --remote-debugging-port=9222
 ```
+
+_note:_ Mac users may have a `google-chrome: command not found` error. If that's the case, run the following command and repeat the previous step:
+
+```bash
+alias google-chrome="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
+```
+
 or simply using docker
 
 ``` bash
