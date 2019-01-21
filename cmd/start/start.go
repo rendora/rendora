@@ -3,7 +3,7 @@ package start
 import (
 	"log"
 
-	"github.com/rendora/rendora/pkg/rendora"
+	"github.com/rendora/rendora/service/rendora"
 	"github.com/spf13/cobra"
 )
 
