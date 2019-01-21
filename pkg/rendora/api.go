@@ -24,15 +24,14 @@ type apiRenderArgs struct {
 }
 
 // APIRender provides the http client with HeadlessResponse
-func (R *Rendora) apiRender(c *gin.Context) {
-
+func (r *Rendora) apiRender(c *gin.Context) {
 	var args apiRenderArgs
 	if err := c.ShouldBindJSON(&args); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	resp, err := R.getResponse(args.URI)
+	resp, err := r.getResponse(args.URI)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

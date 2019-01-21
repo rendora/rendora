@@ -106,14 +106,14 @@ type rendoraConfig struct {
 }
 
 // InitConfig initializes the application configuration
-func (R *Rendora) initConfig() error {
+func (r *Rendora) initConfig() error {
 
-	if R.cfgFile == "" {
+	if r.cfgFile == "" {
 		viper.SetConfigName("config")
 		viper.AddConfigPath(".")
 		viper.AddConfigPath("/etc/rendora")
 	} else {
-		viper.SetConfigFile(R.cfgFile)
+		viper.SetConfigFile(r.cfgFile)
 	}
 
 	viper.SetDefault("debug", false)
@@ -148,29 +148,29 @@ func (R *Rendora) initConfig() error {
 		return err
 	}
 
-	err = viper.Unmarshal(R.c)
+	err = viper.Unmarshal(r.c)
 
 	if err != nil {
 		return err
 	}
 
-	_, err = govalidator.ValidateStruct(R.c)
+	_, err = govalidator.ValidateStruct(r.c)
 	if err != nil {
 		return err
 	}
 
-	R.initCacheStore()
+	r.initCacheStore()
 
-	defaultBlockedURLs = R.c.Headless.BlockedURLs
+	defaultBlockedURLs = r.c.Headless.BlockedURLs
 
-	R.backendURL, err = url.Parse(R.c.Backend.URL)
+	r.backendURL, err = url.Parse(r.c.Backend.URL)
 	if err != nil {
 		return err
 	}
 
 	log.Println("Configuration loaded")
 
-	err = R.newHeadlessClient()
+	err = r.newHeadlessClient()
 
 	if err != nil {
 		return err
@@ -178,8 +178,8 @@ func (R *Rendora) initConfig() error {
 
 	log.Println("Connected to headless Chrome")
 
-	if R.c.Server.Enable {
-		R.initPrometheus()
+	if r.c.Server.Enable {
+		r.initPrometheus()
 	}
 
 	return nil
