@@ -93,20 +93,20 @@ func checkHeadless(arg string) error {
 }
 
 //NewHeadlessClient creates HeadlessClient
-func (R *Rendora) newHeadlessClient() error {
+func (r *Rendora) newHeadlessClient() error {
 	ret := &headlessClient{
-		Mtx: &sync.Mutex{},
-		rendora: R,
+		Mtx:     &sync.Mutex{},
+		rendora: r,
 	}
 	ctx := context.Background()
 
-	err := checkHeadless(R.c.Headless.Internal.URL)
+	err := checkHeadless(r.c.Headless.Internal.URL)
 	if err != nil {
 		return err
 	}
 
 	// looks like cdp doesn't resolve hostnames automatically, may lead to problems when used with container networks
-	resolvedURL, err := resolveURLHostname(R.c.Headless.Internal.URL)
+	resolvedURL, err := resolveURLHostname(r.c.Headless.Internal.URL)
 	if err != nil {
 		return err
 	}
@@ -164,7 +164,7 @@ func (R *Rendora) newHeadlessClient() error {
 		return err
 	}
 
-	R.h = ret
+	r.h = ret
 
 	return nil
 }
@@ -226,7 +226,7 @@ func (c *headlessClient) getResponse(uri string) (*HeadlessResponse, error) {
 	elapsed := float64(time.Since(timeStart)) / float64(time.Duration(1*time.Millisecond))
 
 	if c.rendora.c.Server.Enable {
-		
+
 		c.rendora.metrics.Duration.Observe(elapsed)
 	}
 
@@ -236,7 +236,7 @@ func (c *headlessClient) getResponse(uri string) (*HeadlessResponse, error) {
 		return nil, err
 	}
 	ret := &HeadlessResponse{
-		Content:    domResponse.OuterHTML,
+		Content: domResponse.OuterHTML,
 		Status:  responseReply.Response.Status,
 		Headers: responseHeaders,
 		Latency: elapsed,

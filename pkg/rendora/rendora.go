@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -24,106 +25,18 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-func (R *Rendora) getProxy(c *gin.Context) {
-	director := func(req *http.Request) {
-		req.Host = R.backendURL.Host
-		req.URL.Scheme = R.backendURL.Scheme
-		req.URL.Host = R.backendURL.Host
-		req.RequestURI = c.Request.RequestURI
-	}
-	proxy := &httputil.ReverseProxy{Director: director}
-	proxy.ServeHTTP(c.Writer, c.Request)
-}
-
-func (R *Rendora) middleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if c.Request.Method != http.MethodGet {
-			R.getProxy(c)
-			return
-		}
-
-		if c.Request.Header.Get("X-Rendora-Type") == "RENDER" {
-			R.getProxy(c)
-			return
-		}
-
-		if R.isWhitelisted(c) {
-			R.getSSR(c)
-		} else {
-			R.getProxy(c)
-		}
-
-		if R.c.Server.Enable {
-			R.metrics.CountTotal.Inc()
-		}
-	}
-}
-
-func (R *Rendora) initProxyServer() *http.Server {
-	r := gin.New()
-	r.Use(R.middleware())
-
-	srv := &http.Server{
-		Addr:         fmt.Sprintf("%s:%d", R.c.Listen.Address, R.c.Listen.Port),
-		Handler:      r,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-	}
-
-	return srv
-}
-
-func (R *Rendora) initRendoraServer() *http.Server {
-	r := gin.New()
-	r.Use(func(c *gin.Context) {
-		if R.c.Server.Auth.Enable {
-			if c.Request.Header.Get(R.c.Server.Auth.Name) != R.c.Server.Auth.Value {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-					"error": "wrong authentication key",
-				})
-			}
-		}
-
-	})
-	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
-
-	r.POST("/render", R.apiRender)
-
-	srv := &http.Server{
-		Addr:         fmt.Sprintf("%s:%d", R.c.Server.Listen.Address, R.c.Server.Listen.Port),
-		Handler:      r,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-	}
-
-	return srv
-}
-
 var (
 	g errgroup.Group
 )
 
-//Run starts Rendora proxy nd API (if enabled) servers
-func (R *Rendora) Run() error {
-
-	if R.c.Debug == false {
-		gin.SetMode(gin.ReleaseMode)
-	}
-
-	g.Go(func() error {
-		return R.initProxyServer().ListenAndServe()
-	})
-
-	if R.c.Server.Enable {
-		g.Go(func() error {
-			return R.initRendoraServer().ListenAndServe()
-		})
-	}
-
-	if err := g.Wait(); err != nil {
-		return err
-	}
-	return nil
+//Rendora contains the main structure instance
+type Rendora struct {
+	c          *rendoraConfig
+	cache      *cacheStore
+	backendURL *url.URL
+	h          *headlessClient
+	metrics    *metrics
+	cfgFile    string
 }
 
 //New creates a new Rendora instance
@@ -133,9 +46,110 @@ func New(cfgFile string) (*Rendora, error) {
 		metrics: &metrics{},
 		cfgFile: cfgFile,
 	}
+
 	err := rendora.initConfig()
 	if err != nil {
 		return nil, err
 	}
+
 	return rendora, nil
+}
+
+//Run starts Rendora proxy nd API (if enabled) servers
+func (r *Rendora) Run() error {
+	if r.c.Debug == false {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	g.Go(func() error {
+		return r.initProxyServer().ListenAndServe()
+	})
+
+	if r.c.Server.Enable {
+		g.Go(func() error {
+			return r.initRendoraServer().ListenAndServe()
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *Rendora) initProxyServer() *http.Server {
+	router := gin.New()
+	router.Use(r.middleware())
+
+	srv := &http.Server{
+		Addr:         fmt.Sprintf("%s:%d", r.c.Listen.Address, r.c.Listen.Port),
+		Handler:      router,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+
+	return srv
+}
+
+func (r *Rendora) initRendoraServer() *http.Server {
+	router := gin.New()
+	router.Use(func(c *gin.Context) {
+		if r.c.Server.Auth.Enable {
+			if c.Request.Header.Get(r.c.Server.Auth.Name) != r.c.Server.Auth.Value {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+					"error": "wrong authentication key",
+				})
+			}
+		}
+
+	})
+
+	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
+	router.POST("/render", r.apiRender)
+
+	srv := &http.Server{
+		Addr:         fmt.Sprintf("%s:%d", r.c.Server.Listen.Address, r.c.Server.Listen.Port),
+		Handler:      router,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+
+	return srv
+}
+
+func (r *Rendora) getProxy(c *gin.Context) {
+	director := func(req *http.Request) {
+		req.Host = r.backendURL.Host
+		req.URL.Scheme = r.backendURL.Scheme
+		req.URL.Host = r.backendURL.Host
+		req.RequestURI = c.Request.RequestURI
+	}
+
+	proxy := &httputil.ReverseProxy{Director: director}
+	proxy.ServeHTTP(c.Writer, c.Request)
+}
+
+func (r *Rendora) middleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if c.Request.Method != http.MethodGet {
+			r.getProxy(c)
+			return
+		}
+
+		if c.Request.Header.Get("X-Rendora-Type") == "RENDER" {
+			r.getProxy(c)
+			return
+		}
+
+		if r.isWhitelisted(c) {
+			r.getSSR(c)
+		} else {
+			r.getProxy(c)
+		}
+
+		if r.c.Server.Enable {
+			r.metrics.CountTotal.Inc()
+		}
+	}
 }

@@ -185,13 +185,3 @@ func (R *Rendora) initConfig() error {
 	return nil
 
 }
-
-//Rendora contains the main structure instance
-type Rendora struct {
-	c          *rendoraConfig
-	cache      *cacheStore
-	backendURL *url.URL
-	h          *headlessClient
-	metrics    *metrics
-	cfgFile    string
-}

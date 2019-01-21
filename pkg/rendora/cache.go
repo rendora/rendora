@@ -38,22 +38,22 @@ const (
 )
 
 //InitCacheStore initializes the cache store
-func (R *Rendora) initCacheStore() {
+func (r *Rendora) initCacheStore() {
 	cs := &cacheStore{
-		DefaultTimeout: time.Duration(R.c.Cache.Timeout) * time.Second,
-		rendora:        R,
+		DefaultTimeout: time.Duration(r.c.Cache.Timeout) * time.Second,
+		rendora:        r,
 	}
 
-	switch R.c.Cache.Type {
+	switch r.c.Cache.Type {
 	case "local":
 		cs.Type = typeLocal
 		cs.gocache = cache.New(cs.DefaultTimeout, 4*time.Minute)
 	case "redis":
 		cs.Type = typeRedis
 		cs.redis = redis.NewClient(&redis.Options{
-			Addr:     R.c.Cache.Redis.Address,
-			Password: R.c.Cache.Redis.Password,
-			DB:       R.c.Cache.Redis.DB,
+			Addr:     r.c.Cache.Redis.Address,
+			Password: r.c.Cache.Redis.Password,
+			DB:       r.c.Cache.Redis.DB,
 		})
 	case "none":
 		cs.Type = typeNone
@@ -61,7 +61,7 @@ func (R *Rendora) initCacheStore() {
 		cs.Type = typeLocal
 	}
 
-	R.cache = cs
+	r.cache = cs
 }
 
 //Set stores HeadlessResponse in the cache with the key cKey (i.e. request path)

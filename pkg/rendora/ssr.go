@@ -85,13 +85,13 @@ func getHeadlessExternal(uri string) (*HeadlessResponse, error) {
 
 var targetURL string
 
-func (R *Rendora) getHeadless(uri string) (*HeadlessResponse, error) {
-	return R.h.getResponse(R.c.Target.URL + uri)
+func (r *Rendora) getHeadless(uri string) (*HeadlessResponse, error) {
+	return r.h.getResponse(r.c.Target.URL + uri)
 }
 
-func (R *Rendora) getResponse(uri string) (*HeadlessResponse, error) {
-	cKey := R.c.Cache.Redis.KeyPrefix + ":" + uri
-	resp, exists, err := R.cache.get(cKey)
+func (r *Rendora) getResponse(uri string) (*HeadlessResponse, error) {
+	cKey := r.c.Cache.Redis.KeyPrefix + ":" + uri
+	resp, exists, err := r.cache.get(cKey)
 
 	if err != nil {
 		log.Println(err)
@@ -101,11 +101,11 @@ func (R *Rendora) getResponse(uri string) (*HeadlessResponse, error) {
 		return resp, nil
 	}
 
-	dt, err := R.getHeadless(uri)
+	dt, err := r.getHeadless(uri)
 	if err != nil {
 		return nil, err
 	}
-	if R.c.Output.Minify {
+	if r.c.Output.Minify {
 		m := minify.New()
 		m.AddFunc("text/html", html.Minify)
 		m.AddFunc("text/css", css.Minify)
@@ -115,13 +115,13 @@ func (R *Rendora) getResponse(uri string) (*HeadlessResponse, error) {
 		}
 	}
 
-	defer R.cache.set(cKey, dt)
+	defer r.cache.set(cKey, dt)
 	return dt, nil
 }
 
-func (R *Rendora) getSSR(c *gin.Context) {
+func (r *Rendora) getSSR(c *gin.Context) {
 
-	resp, err := R.getResponse(c.Request.RequestURI)
+	resp, err := r.getResponse(c.Request.RequestURI)
 	if err != nil {
 		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
@@ -135,8 +135,8 @@ func (R *Rendora) getSSR(c *gin.Context) {
 	c.Header("Content-Type", contentHdr)
 	c.String(resp.Status, resp.Content)
 
-	if R.c.Server.Enable {
-		R.metrics.CountSSR.Inc()
+	if r.c.Server.Enable {
+		r.metrics.CountSSR.Inc()
 	}
 
 }

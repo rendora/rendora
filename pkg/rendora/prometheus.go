@@ -23,7 +23,7 @@ type metrics struct {
 	CountSSRCached prometheus.Counter
 }
 
-func (R *Rendora) initPrometheus() {
+func (r *Rendora) initPrometheus() {
 	ret := &metrics{}
 	ret.CountTotal = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "rendora_requests_total",
@@ -49,5 +49,6 @@ func (R *Rendora) initPrometheus() {
 	prometheus.MustRegister(ret.CountTotal)
 	prometheus.MustRegister(ret.CountSSR)
 	prometheus.MustRegister(ret.Duration)
-	R.metrics = ret
+
+	r.metrics = ret
 }

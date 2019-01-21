@@ -15,55 +15,30 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
-	"runtime"
 
-	"github.com/rendora/rendora/pkg/rendora"
+	"github.com/rendora/rendora/cmd/start"
+	"github.com/rendora/rendora/cmd/version"
+
 	"github.com/spf13/cobra"
 )
 
-// VERSION prints the git version of Rendora
-var VERSION string
+var gitVersion string
 
 func main() {
-
-	cobra.OnInitialize()
 	var cfgFile string
 
 	rootCmd := &cobra.Command{
 		Use:  "rendora",
-		Long: `dynamic server-side rendering using headless Chrome to effortlessly solve the SEO problem for modern javascript websites`,
-		Run: func(cmd *cobra.Command, args []string) {
-			Rendora, err := rendora.New(cfgFile)
-			if err != nil {
-				log.Fatal(err)
-			}
-			err = Rendora.Run()
-
-			if err != nil {
-				log.Fatal(err)
-			}
-
-		},
+		Long: "dynamic server-side rendering using headless Chrome to effortlessly solve the SEO problem for modern javascript websites",
 	}
 
+	rootCmd.AddCommand(start.RunCommand(cfgFile))
+	rootCmd.AddCommand(version.RunCommand(gitVersion))
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file")
 
-	var versionCmd = &cobra.Command{
-		Use:   "version",
-		Short: "Print the version number of rendora",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Rendora Version: ", VERSION)
-			fmt.Println("Go Version: ", runtime.Version())
-		},
-	}
-
-	rootCmd.AddCommand(versionCmd)
-
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-
 }
