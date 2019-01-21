@@ -8,8 +8,10 @@ import (
 )
 
 // RunCommand start run rendora service
-func RunCommand(cfgFile string) *cobra.Command {
-	return &cobra.Command{
+func RunCommand() *cobra.Command {
+	var cfgFile string
+
+	cmd := &cobra.Command{
 		Use:     "start",
 		Short:   "Start run rendora service",
 		Aliases: []string{"s"},
@@ -25,4 +27,8 @@ func RunCommand(cfgFile string) *cobra.Command {
 			}
 		},
 	}
+
+	cmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file")
+
+	return cmd
 }

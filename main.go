@@ -26,16 +26,13 @@ import (
 var gitVersion string
 
 func main() {
-	var cfgFile string
-
 	rootCmd := &cobra.Command{
 		Use:  "rendora",
 		Long: "dynamic server-side rendering using headless Chrome to effortlessly solve the SEO problem for modern javascript websites",
 	}
 
-	rootCmd.AddCommand(start.RunCommand(cfgFile))
+	rootCmd.AddCommand(start.RunCommand())
 	rootCmd.AddCommand(version.RunCommand(gitVersion))
-	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file")
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err.Error())
