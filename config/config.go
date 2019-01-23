@@ -11,22 +11,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package rendora
+package config
 
 import (
-	"log"
-	"net/url"
-
 	"github.com/asaskevich/govalidator"
 	"github.com/spf13/viper"
 )
 
-type backend struct {
-	URL string
-}
-
-//rendoraConfig represents the global configuration of Rendora
-type rendoraConfig struct {
+//RendoraConfig represents the global configuration of Rendora
+type RendoraConfig struct {
 	HeadlessMode string `mapstructure:"headlessMode" valid:"in(default|internal|external)"`
 	Debug        bool   `mapstructure:"debug"`
 	Listen       struct {
@@ -105,15 +98,14 @@ type rendoraConfig struct {
 	}
 }
 
-// InitConfig initializes the application configuration
-func (r *Rendora) initConfig() error {
-
-	if r.cfgFile == "" {
+// New initializes the application configuration
+func New(cfgFile string) (*RendoraConfig, error) {
+	if cfgFile == "" {
 		viper.SetConfigName("config")
 		viper.AddConfigPath(".")
 		viper.AddConfigPath("/etc/rendora")
 	} else {
-		viper.SetConfigFile(r.cfgFile)
+		viper.SetConfigFile(cfgFile)
 	}
 
 	viper.SetDefault("debug", false)
@@ -145,43 +137,19 @@ func (r *Rendora) initConfig() error {
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	err = viper.Unmarshal(r.c)
-
+	c := &RendoraConfig{}
+	err = viper.Unmarshal(c)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	_, err = govalidator.ValidateStruct(r.c)
+	_, err = govalidator.ValidateStruct(c)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	r.initCacheStore()
-
-	defaultBlockedURLs = r.c.Headless.BlockedURLs
-
-	r.backendURL, err = url.Parse(r.c.Backend.URL)
-	if err != nil {
-		return err
-	}
-
-	log.Println("Configuration loaded")
-
-	err = r.newHeadlessClient()
-
-	if err != nil {
-		return err
-	}
-
-	log.Println("Connected to headless Chrome")
-
-	if r.c.Server.Enable {
-		r.initPrometheus()
-	}
-
-	return nil
-
+	return c, nil
 }

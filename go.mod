@@ -7,8 +7,10 @@ require (
 	github.com/gin-gonic/gin v1.3.0
 	github.com/go-redis/redis v6.14.2+incompatible
 	github.com/golang/protobuf v1.2.0 // indirect
+	github.com/google/pprof v0.0.0-20190109223431-e84dfd68c163 // indirect
 	github.com/gorilla/mux v1.6.2
 	github.com/gorilla/websocket v1.4.0 // indirect
+	github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6 // indirect
 	github.com/json-iterator/go v1.1.5
 	github.com/mafredri/cdp v0.20.0
 	github.com/mattn/go-isatty v0.0.4 // indirect

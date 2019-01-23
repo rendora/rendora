@@ -15,10 +15,13 @@ package rendora
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"time"
+
+	"github.com/rendora/rendora/config"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -31,7 +34,7 @@ var (
 
 //Rendora contains the main structure instance
 type Rendora struct {
-	c          *rendoraConfig
+	c          *config.RendoraConfig
 	cache      *cacheStore
 	backendURL *url.URL
 	h          *headlessClient
@@ -41,15 +44,37 @@ type Rendora struct {
 
 //New creates a new Rendora instance
 func New(cfgFile string) (*Rendora, error) {
+	c, err := config.New(cfgFile)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Println("Configuration loaded")
+
 	rendora := &Rendora{
-		c:       &rendoraConfig{},
+		c:       c,
 		metrics: &metrics{},
 		cfgFile: cfgFile,
 	}
 
-	err := rendora.initConfig()
+	rendora.initCacheStore()
+
+	defaultBlockedURLs = rendora.c.Headless.BlockedURLs
+
+	rendora.backendURL, err = url.Parse(rendora.c.Backend.URL)
 	if err != nil {
 		return nil, err
+	}
+
+	err = rendora.newHeadlessClient()
+	if err != nil {
+		return nil, err
+	}
+
+	log.Println("Connected to headless Chrome")
+
+	if rendora.c.Server.Enable {
+		rendora.initPrometheus()
 	}
 
 	return rendora, nil
