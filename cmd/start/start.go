@@ -16,12 +16,12 @@ func RunCommand() *cobra.Command {
 		Short:   "Start run rendora service",
 		Aliases: []string{"s"},
 		Run: func(cmd *cobra.Command, args []string) {
-			Rendora, err := rendora.New(cfgFile)
+			rendora, err := rendora.New(cfgFile)
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			err = Rendora.Run()
+			err = rendora.Run()
 			if err != nil {
 				log.Fatal(err)
 			}
