@@ -1,0 +1,22 @@
+
+
+
+[listen]
+port = 3001
+[target]
+url = "http://127.0.0.1"
+
+[backend]
+url = "http://127.0.0.1:8000"
+
+
+[cache]
+type = "none"
+
+[filters]
+    [userAgent]
+    defaultPolicy = "whitelist"
+
+
+[server]
+enable = true
