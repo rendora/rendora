@@ -185,7 +185,7 @@ func NewHeadlessClient(cfg *HeadlessConfig) (*HeadlessClient, error) {
 	return ret, nil
 }
 
-//GoTo navigates to the url, fetches the DOM and returns HeadlessResponse
+// GetResponse GoTo navigates to the url, fetches the DOM and returns HeadlessResponse
 func (c *HeadlessClient) GetResponse(uri string) (*HeadlessResponse, error) {
 	c.Mtx.Lock()
 	defer c.Mtx.Unlock()
