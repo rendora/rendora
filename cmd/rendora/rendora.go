@@ -110,7 +110,11 @@ func (r *rendora) run() error {
 	}
 
 	g.Go(func() error {
-		return r.initProxyServer().ListenAndServe()
+		if r.c.Proxy {
+			return r.initProxyServer().ListenAndServe()
+		}
+
+		return r.initStaticServer().ListenAndServe()
 	})
 
 	if r.c.Server.Enable {
@@ -129,6 +133,21 @@ func (r *rendora) run() error {
 func (r *rendora) initProxyServer() *http.Server {
 	router := gin.New()
 	router.Use(r.middleware())
+
+	srv := &http.Server{
+		Addr:         fmt.Sprintf("%s:%d", r.c.Listen.Address, r.c.Listen.Port),
+		Handler:      router,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+
+	return srv
+}
+
+func (r *rendora) initStaticServer() *http.Server {
+	router := gin.New()
+	router.Use(r.middleware())
+	router.Static("/", r.c.StaticDir)
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", r.c.Listen.Address, r.c.Listen.Port),
@@ -181,19 +200,27 @@ func (r *rendora) getProxy(c *gin.Context) {
 func (r *rendora) middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.Method != http.MethodGet {
-			r.getProxy(c)
+			if r.c.Proxy {
+				r.getProxy(c)
+			}
+
 			return
 		}
 
 		if c.Request.Header.Get("X-Rendora-Type") == "RENDER" {
-			r.getProxy(c)
+			if r.c.Proxy {
+				r.getProxy(c)
+			}
+
 			return
 		}
 
 		if r.isWhitelisted(c) {
 			r.getSSR(c)
 		} else {
-			r.getProxy(c)
+			if r.c.Proxy {
+				r.getProxy(c)
+			}
 		}
 
 		if r.c.Server.Enable {

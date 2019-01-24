@@ -22,6 +22,8 @@ import (
 type RendoraConfig struct {
 	HeadlessMode string `mapstructure:"headlessMode" valid:"in(default|internal|external)"`
 	Debug        bool   `mapstructure:"debug"`
+	Proxy        bool   `mapstructure:"proxy"`
+	StaticDir    string `mapstructure:"staticDir"`
 	Listen       struct {
 		Address string `valid:"ip"`
 		Port    uint16 `valid:"range(1|65535)"`
@@ -109,6 +111,8 @@ func New(cfgFile string) (*RendoraConfig, error) {
 	}
 
 	viper.SetDefault("debug", false)
+	viper.SetDefault("proxy", false)
+	viper.SetDefault("staticDir", "./static")
 	viper.SetDefault("listen.port", 3001)
 	viper.SetDefault("listen.address", "0.0.0.0")
 	viper.SetDefault("cache.type", "local")
