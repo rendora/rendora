@@ -11,7 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package start
+package rendora
 
 import (
 	"log"
@@ -21,13 +21,10 @@ import (
 	"github.com/rendora/rendora/service"
 
 	"github.com/gin-gonic/gin"
-	jsoniter "github.com/json-iterator/go"
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/css"
 	"github.com/tdewolff/minify/v2/html"
 )
-
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type reqBody struct {
 	URL string `json:"url"`
@@ -80,7 +77,7 @@ func getHeadlessExternal(uri string) (*HeadlessResponse, error) {
 
 var targetURL string
 
-func (r *Rendora) getHeadless(uri string) (*service.HeadlessResponse, error) {
+func (r *rendora) getHeadless(uri string) (*service.HeadlessResponse, error) {
 	timeStart := time.Now()
 	elapsed := float64(time.Since(timeStart)) / float64(time.Duration(1*time.Millisecond))
 
@@ -98,7 +95,7 @@ func (r *Rendora) getHeadless(uri string) (*service.HeadlessResponse, error) {
 	return headlessResponse, nil
 }
 
-func (r *Rendora) getResponse(uri string) (*service.HeadlessResponse, error) {
+func (r *rendora) getResponse(uri string) (*service.HeadlessResponse, error) {
 	cKey := r.c.Cache.Redis.KeyPrefix + ":" + uri
 	resp, exists, err := r.cache.Get(cKey)
 	if err != nil {
@@ -131,8 +128,7 @@ func (r *Rendora) getResponse(uri string) (*service.HeadlessResponse, error) {
 	return dt, nil
 }
 
-func (r *Rendora) getSSR(c *gin.Context) {
-
+func (r *rendora) getSSR(c *gin.Context) {
 	resp, err := r.getResponse(c.Request.RequestURI)
 	if err != nil {
 		c.AbortWithStatus(http.StatusServiceUnavailable)
@@ -150,5 +146,4 @@ func (r *Rendora) getSSR(c *gin.Context) {
 	if r.c.Server.Enable {
 		r.metrics.CountSSR.Inc()
 	}
-
 }

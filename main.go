@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/rendora/rendora/cmd/start"
+	"github.com/rendora/rendora/cmd/rendora"
 	"github.com/rendora/rendora/cmd/version"
 
 	"github.com/spf13/cobra"
@@ -31,7 +31,7 @@ func main() {
 		Long: "dynamic server-side rendering using headless Chrome to effortlessly solve the SEO problem for modern javascript websites",
 	}
 
-	rootCmd.AddCommand(start.RunCommand())
+	rootCmd.AddCommand(rendora.RunCommand())
 	rootCmd.AddCommand(version.RunCommand(gitVersion))
 
 	if err := rootCmd.Execute(); err != nil {

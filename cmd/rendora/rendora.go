@@ -11,7 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package start
+package rendora
 
 import (
 	"fmt"
@@ -23,6 +23,7 @@ import (
 
 	"github.com/rendora/rendora/config"
 	"github.com/rendora/rendora/service"
+	"github.com/spf13/cobra"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -34,7 +35,7 @@ var (
 )
 
 //Rendora contains the main structure instance
-type Rendora struct {
+type rendora struct {
 	c          *config.RendoraConfig
 	cache      *service.Store
 	backendURL *url.URL
@@ -43,8 +44,8 @@ type Rendora struct {
 	cfgFile    string
 }
 
-//New creates a new Rendora instance
-func New(cfgFile string) (*Rendora, error) {
+//new creates a new Rendora instance
+func new(cfgFile string) (*rendora, error) {
 	c, err := config.New(cfgFile)
 	if err != nil {
 		return nil, err
@@ -52,7 +53,7 @@ func New(cfgFile string) (*Rendora, error) {
 
 	log.Println("Configuration loaded")
 
-	rendora := &Rendora{
+	rendora := &rendora{
 		c:       c,
 		metrics: &service.Metrics{},
 		cfgFile: cfgFile,
@@ -103,7 +104,7 @@ func New(cfgFile string) (*Rendora, error) {
 }
 
 //Run starts Rendora proxy nd API (if enabled) servers
-func (r *Rendora) Run() error {
+func (r *rendora) run() error {
 	if r.c.Debug == false {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -125,7 +126,7 @@ func (r *Rendora) Run() error {
 	return nil
 }
 
-func (r *Rendora) initProxyServer() *http.Server {
+func (r *rendora) initProxyServer() *http.Server {
 	router := gin.New()
 	router.Use(r.middleware())
 
@@ -139,7 +140,7 @@ func (r *Rendora) initProxyServer() *http.Server {
 	return srv
 }
 
-func (r *Rendora) initRendoraServer() *http.Server {
+func (r *rendora) initRendoraServer() *http.Server {
 	router := gin.New()
 	router.Use(func(c *gin.Context) {
 		if r.c.Server.Auth.Enable {
@@ -165,7 +166,7 @@ func (r *Rendora) initRendoraServer() *http.Server {
 	return srv
 }
 
-func (r *Rendora) getProxy(c *gin.Context) {
+func (r *rendora) getProxy(c *gin.Context) {
 	director := func(req *http.Request) {
 		req.Host = r.backendURL.Host
 		req.URL.Scheme = r.backendURL.Scheme
@@ -177,7 +178,7 @@ func (r *Rendora) getProxy(c *gin.Context) {
 	proxy.ServeHTTP(c.Writer, c.Request)
 }
 
-func (r *Rendora) middleware() gin.HandlerFunc {
+func (r *rendora) middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.Method != http.MethodGet {
 			r.getProxy(c)
@@ -199,4 +200,30 @@ func (r *Rendora) middleware() gin.HandlerFunc {
 			r.metrics.CountTotal.Inc()
 		}
 	}
+}
+
+// RunCommand start run rendora service
+func RunCommand() *cobra.Command {
+	var cfgFile string
+
+	cmd := &cobra.Command{
+		Use:     "start",
+		Short:   "Start run rendora service",
+		Aliases: []string{"s"},
+		Run: func(cmd *cobra.Command, args []string) {
+			rendora, err := new(cfgFile)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			err = rendora.run()
+			if err != nil {
+				log.Fatal(err)
+			}
+		},
+	}
+
+	cmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file")
+
+	return cmd
 }

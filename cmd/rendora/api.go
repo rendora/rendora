@@ -11,9 +11,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package start
+package rendora
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -24,7 +25,7 @@ type apiRenderArgs struct {
 }
 
 // APIRender provides the http client with HeadlessResponse
-func (r *Rendora) apiRender(c *gin.Context) {
+func (r *rendora) apiRender(c *gin.Context) {
 	var args apiRenderArgs
 	if err := c.ShouldBindJSON(&args); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

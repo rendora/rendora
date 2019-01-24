@@ -11,7 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package start
+package rendora
 
 import (
 	"strings"
@@ -47,7 +47,7 @@ func hasPrefixinSlice(slice []string, str string) bool {
 }
 
 //isWhitelisted checks whether the current request is whitelisted (i.e. should be SSR'ed) or not
-func (r *Rendora) isWhitelisted(c *gin.Context) bool {
+func (r *rendora) isWhitelisted(c *gin.Context) bool {
 	mua := c.Request.Header.Get("User-Agent")
 	muaLower := strings.ToLower(mua)
 	filters := &r.c.Filters
