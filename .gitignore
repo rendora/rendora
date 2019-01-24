@@ -1,4 +1,3 @@
-cmd/rendora/rendora
-cmd/rendora/conf.*
 .vscode/
-.rendora
+rendora
+/config.yml
