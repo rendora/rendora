@@ -11,7 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package rendora
+package start
 
 import (
 	"fmt"
@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/rendora/rendora/config"
+	"github.com/rendora/rendora/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -35,10 +36,10 @@ var (
 //Rendora contains the main structure instance
 type Rendora struct {
 	c          *config.RendoraConfig
-	cache      *cacheStore
+	cache      *service.Store
 	backendURL *url.URL
-	h          *headlessClient
-	metrics    *metrics
+	h          *service.HeadlessClient
+	metrics    *service.Metrics
 	cfgFile    string
 }
 
@@ -53,28 +54,49 @@ func New(cfgFile string) (*Rendora, error) {
 
 	rendora := &Rendora{
 		c:       c,
-		metrics: &metrics{},
+		metrics: &service.Metrics{},
 		cfgFile: cfgFile,
 	}
 
-	rendora.initCacheStore()
-
-	defaultBlockedURLs = rendora.c.Headless.BlockedURLs
+	rendora.cache = service.InitCacheStore(&service.StoreConfig{
+		Type:    rendora.c.Cache.Type,
+		Timeout: rendora.c.Cache.Timeout,
+		Redis: struct {
+			Address   string
+			Password  string
+			DB        int
+			KeyPrefix string
+		}{
+			Address:   rendora.c.Cache.Redis.Address,
+			Password:  rendora.c.Cache.Redis.Password,
+			DB:        rendora.c.Cache.Redis.DB,
+			KeyPrefix: rendora.c.Cache.Redis.KeyPrefix,
+		},
+	})
 
 	rendora.backendURL, err = url.Parse(rendora.c.Backend.URL)
 	if err != nil {
 		return nil, err
 	}
 
-	err = rendora.newHeadlessClient()
+	headlessClient, err := service.NewHeadlessClient(&service.HeadlessConfig{
+		Mode:             rendora.c.Headless.Mode,
+		URL:              rendora.c.Headless.URL,
+		AuthToken:        rendora.c.Headless.AuthToken,
+		BlockedURLs:      rendora.c.Headless.BlockedURLs,
+		Timeout:          rendora.c.Headless.Timeout,
+		InternalURL:      rendora.c.Headless.Internal.URL,
+		WaitAfterDOMLoad: rendora.c.Headless.WaitAfterDOMLoad,
+	})
 	if err != nil {
 		return nil, err
 	}
 
+	rendora.h = headlessClient
 	log.Println("Connected to headless Chrome")
 
 	if rendora.c.Server.Enable {
-		rendora.initPrometheus()
+		rendora.metrics = service.InitPrometheus()
 	}
 
 	return rendora, nil

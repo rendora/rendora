@@ -3,7 +3,6 @@ package start
 import (
 	"log"
 
-	"github.com/rendora/rendora/service/rendora"
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +15,7 @@ func RunCommand() *cobra.Command {
 		Short:   "Start run rendora service",
 		Aliases: []string{"s"},
 		Run: func(cmd *cobra.Command, args []string) {
-			rendora, err := rendora.New(cfgFile)
+			rendora, err := New(cfgFile)
 			if err != nil {
 				log.Fatal(err)
 			}

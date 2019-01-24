@@ -11,11 +11,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package rendora
+package start
 
 import (
 	"log"
 	"net/http"
+	"time"
+
+	"github.com/rendora/rendora/service"
 
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
@@ -28,14 +31,6 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type reqBody struct {
 	URL string `json:"url"`
-}
-
-//HeadlessResponse contains the status code, DOM content and headers of the response coming from the headless chrome instance
-type HeadlessResponse struct {
-	Status  int               `json:"status"`
-	Content string            `json:"content"`
-	Headers map[string]string `json:"headers"`
-	Latency float64           `json:"latency"`
 }
 
 /*
@@ -85,19 +80,36 @@ func getHeadlessExternal(uri string) (*HeadlessResponse, error) {
 
 var targetURL string
 
-func (r *Rendora) getHeadless(uri string) (*HeadlessResponse, error) {
-	return r.h.getResponse(r.c.Target.URL + uri)
+func (r *Rendora) getHeadless(uri string) (*service.HeadlessResponse, error) {
+	timeStart := time.Now()
+	elapsed := float64(time.Since(timeStart)) / float64(time.Duration(1*time.Millisecond))
+
+	if r.c.Server.Enable {
+		r.metrics.Duration.Observe(elapsed)
+	}
+
+	headlessResponse, err := r.h.GetResponse(r.c.Target.URL + uri)
+	if err != nil {
+		return nil, err
+	}
+
+	headlessResponse.Latency = elapsed
+
+	return headlessResponse, nil
 }
 
-func (r *Rendora) getResponse(uri string) (*HeadlessResponse, error) {
+func (r *Rendora) getResponse(uri string) (*service.HeadlessResponse, error) {
 	cKey := r.c.Cache.Redis.KeyPrefix + ":" + uri
-	resp, exists, err := r.cache.get(cKey)
-
+	resp, exists, err := r.cache.Get(cKey)
 	if err != nil {
 		log.Println(err)
 	}
 
 	if exists {
+		if r.c.Server.Enable {
+			r.metrics.CountSSRCached.Inc()
+		}
+
 		return resp, nil
 	}
 
@@ -115,7 +127,7 @@ func (r *Rendora) getResponse(uri string) (*HeadlessResponse, error) {
 		}
 	}
 
-	defer r.cache.set(cKey, dt)
+	defer r.cache.Set(cKey, dt)
 	return dt, nil
 }
 

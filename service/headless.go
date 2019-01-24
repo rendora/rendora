@@ -11,10 +11,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package rendora
+package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log"
 	"net"
@@ -31,14 +32,31 @@ import (
 	"github.com/mafredri/cdp/rpcc"
 )
 
-var defaultBlockedURLs []string
-
-//headlessClient contains the info of the headless client, most importantly the cdp.Client
-type headlessClient struct {
+// HeadlessClient contains the info of the headless client, most importantly the cdp.Client
+type HeadlessClient struct {
 	RPCConn *rpcc.Conn
 	C       *cdp.Client
 	Mtx     *sync.Mutex
-	rendora *Rendora
+	Cfg     *HeadlessConfig
+}
+
+//HeadlessResponse contains the status code, DOM content and headers of the response coming from the headless chrome instance
+type HeadlessResponse struct {
+	Status  int               `json:"status"`
+	Content string            `json:"content"`
+	Headers map[string]string `json:"headers"`
+	Latency float64           `json:"latency"`
+}
+
+// HeadlessConfig headless's config
+type HeadlessConfig struct {
+	Mode             string
+	URL              string
+	AuthToken        string
+	BlockedURLs      []string
+	Timeout          uint16
+	InternalURL      string
+	WaitAfterDOMLoad uint16
 }
 
 func resolveURLHostname(arg string) (string, error) {
@@ -93,22 +111,22 @@ func checkHeadless(arg string) error {
 }
 
 //NewHeadlessClient creates HeadlessClient
-func (r *Rendora) newHeadlessClient() error {
-	ret := &headlessClient{
-		Mtx:     &sync.Mutex{},
-		rendora: r,
+func NewHeadlessClient(cfg *HeadlessConfig) (*HeadlessClient, error) {
+	ret := &HeadlessClient{
+		Mtx: &sync.Mutex{},
+		Cfg: cfg,
 	}
 	ctx := context.Background()
 
-	err := checkHeadless(r.c.Headless.Internal.URL)
+	err := checkHeadless(cfg.InternalURL)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// looks like cdp doesn't resolve hostnames automatically, may lead to problems when used with container networks
-	resolvedURL, err := resolveURLHostname(r.c.Headless.Internal.URL)
+	resolvedURL, err := resolveURLHostname(cfg.InternalURL)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	devt := devtool.New(resolvedURL)
@@ -116,30 +134,30 @@ func (r *Rendora) newHeadlessClient() error {
 	if err != nil {
 		pt, err = devt.Create(ctx)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	ret.RPCConn, err = rpcc.DialContext(ctx, pt.WebSocketDebuggerURL)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	ret.C = cdp.NewClient(ret.RPCConn)
 
 	domContent, err := ret.C.Page.DOMContentEventFired(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer domContent.Close()
 
 	if err = ret.C.Page.Enable(ctx); err != nil {
-		return err
+		return nil, err
 	}
 
 	err = ret.C.Network.Enable(ctx, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	headers := map[string]string{
@@ -148,37 +166,33 @@ func (r *Rendora) newHeadlessClient() error {
 
 	headersStr, err := json.Marshal(headers)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = ret.C.Network.SetExtraHTTPHeaders(ctx, network.NewSetExtraHTTPHeadersArgs(headersStr))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	blockedURLs := network.NewSetBlockedURLsArgs(defaultBlockedURLs)
+	blockedURLs := network.NewSetBlockedURLsArgs(cfg.BlockedURLs)
 
 	err = ret.C.Network.SetBlockedURLs(ctx, blockedURLs)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	r.h = ret
-
-	return nil
+	return ret, nil
 }
 
 //GoTo navigates to the url, fetches the DOM and returns HeadlessResponse
-func (c *headlessClient) getResponse(uri string) (*HeadlessResponse, error) {
-
+func (c *HeadlessClient) GetResponse(uri string) (*HeadlessResponse, error) {
 	c.Mtx.Lock()
 	defer c.Mtx.Unlock()
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.rendora.c.Headless.Timeout)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.Cfg.Timeout)*time.Second)
 	defer cancel()
 
-	timeStart := time.Now()
 	navArgs := page.NewNavigateArgs(uri)
 	networkResponse, err := c.C.Network.ResponseReceived(ctx)
 	if err != nil {
@@ -191,7 +205,6 @@ func (c *headlessClient) getResponse(uri string) (*HeadlessResponse, error) {
 	}
 
 	responseReply, err := networkResponse.Recv()
-
 	if err != nil {
 		return nil, err
 	}
@@ -202,9 +215,8 @@ func (c *headlessClient) getResponse(uri string) (*HeadlessResponse, error) {
 	}
 	defer domContent.Close()
 
-	waitUntil := c.rendora.c.Headless.WaitAfterDOMLoad
-	if waitUntil > 0 {
-		time.Sleep(time.Duration(waitUntil) * time.Millisecond)
+	if c.Cfg.WaitAfterDOMLoad > 0 {
+		time.Sleep(time.Duration(c.Cfg.WaitAfterDOMLoad) * time.Millisecond)
 	}
 
 	if _, err = domContent.Recv(); err != nil {
@@ -223,23 +235,16 @@ func (c *headlessClient) getResponse(uri string) (*HeadlessResponse, error) {
 		return nil, err
 	}
 
-	elapsed := float64(time.Since(timeStart)) / float64(time.Duration(1*time.Millisecond))
-
-	if c.rendora.c.Server.Enable {
-
-		c.rendora.metrics.Duration.Observe(elapsed)
-	}
-
 	responseHeaders := make(map[string]string)
 	err = json.Unmarshal(responseReply.Response.Headers, &responseHeaders)
 	if err != nil {
 		return nil, err
 	}
+
 	ret := &HeadlessResponse{
 		Content: domResponse.OuterHTML,
 		Status:  responseReply.Response.Status,
 		Headers: responseHeaders,
-		Latency: elapsed,
 	}
 
 	return ret, nil
