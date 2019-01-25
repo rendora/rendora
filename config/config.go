@@ -45,8 +45,6 @@ type RendoraConfig struct {
 		Internal    struct {
 			URL string `valid:"url"`
 		}
-
-		WaitAfterDOMLoad uint16 `mapstructure:"waitAfterDOMLoad" valid:"range(0|5000)"`
 	} `mapstructure:"headless"`
 
 	Cache struct {
@@ -122,7 +120,6 @@ func New(cfgFile string) (*RendoraConfig, error) {
 	viper.SetDefault("cache.redis.db", 0)
 	viper.SetDefault("output.minify", false)
 	viper.SetDefault("headless.mode", "default")
-	viper.SetDefault("headless.waitAfterDOMLoad", 0)
 	viper.SetDefault("headless.timeout", 15)
 	viper.SetDefault("headless.internal.url", "http://localhost:9222")
 	viper.SetDefault("filters.useragent.defaultPolicy", "blacklist")

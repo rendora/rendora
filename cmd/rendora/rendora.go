@@ -81,13 +81,12 @@ func new(cfgFile string) (*rendora, error) {
 	}
 
 	headlessClient, err := service.NewHeadlessClient(&service.HeadlessConfig{
-		Mode:             rendora.c.Headless.Mode,
-		URL:              rendora.c.Headless.URL,
-		AuthToken:        rendora.c.Headless.AuthToken,
-		BlockedURLs:      rendora.c.Headless.BlockedURLs,
-		Timeout:          rendora.c.Headless.Timeout,
-		InternalURL:      rendora.c.Headless.Internal.URL,
-		WaitAfterDOMLoad: rendora.c.Headless.WaitAfterDOMLoad,
+		Mode:        rendora.c.Headless.Mode,
+		URL:         rendora.c.Headless.URL,
+		AuthToken:   rendora.c.Headless.AuthToken,
+		BlockedURLs: rendora.c.Headless.BlockedURLs,
+		Timeout:     rendora.c.Headless.Timeout,
+		InternalURL: rendora.c.Headless.Internal.URL,
 	})
 	if err != nil {
 		return nil, err

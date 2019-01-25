@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -50,13 +51,12 @@ type HeadlessResponse struct {
 
 // HeadlessConfig headless's config
 type HeadlessConfig struct {
-	Mode             string
-	URL              string
-	AuthToken        string
-	BlockedURLs      []string
-	Timeout          uint16
-	InternalURL      string
-	WaitAfterDOMLoad uint16
+	Mode        string
+	URL         string
+	AuthToken   string
+	BlockedURLs []string
+	Timeout     uint16
+	InternalURL string
 }
 
 func resolveURLHostname(arg string) (string, error) {
@@ -215,37 +215,46 @@ func (c *HeadlessClient) GetResponse(uri string) (*HeadlessResponse, error) {
 	}
 	defer domContent.Close()
 
-	if c.Cfg.WaitAfterDOMLoad > 0 {
-		time.Sleep(time.Duration(c.Cfg.WaitAfterDOMLoad) * time.Millisecond)
-	}
-
-	if _, err = domContent.Recv(); err != nil {
-		return nil, err
-	}
-
-	doc, err := c.C.DOM.GetDocument(ctx, nil)
+	loadEventFired, err := c.C.Page.LoadEventFired(ctx)
 	if err != nil {
 		return nil, err
 	}
+	defer loadEventFired.Close()
 
-	domResponse, err := c.C.DOM.GetOuterHTML(ctx, &dom.GetOuterHTMLArgs{
-		NodeID: &doc.Root.NodeID,
-	})
-	if err != nil {
-		return nil, err
+	for {
+		select {
+		case <-domContent.Ready():
+			if _, err = domContent.Recv(); err != nil {
+				return nil, err
+			}
+		case <-loadEventFired.Ready():
+			doc, err := c.C.DOM.GetDocument(ctx, nil)
+			if err != nil {
+				return nil, err
+			}
+
+			domResponse, err := c.C.DOM.GetOuterHTML(ctx, &dom.GetOuterHTMLArgs{
+				NodeID: &doc.Root.NodeID,
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			responseHeaders := make(map[string]string)
+			err = json.Unmarshal(responseReply.Response.Headers, &responseHeaders)
+			if err != nil {
+				return nil, err
+			}
+
+			ret := &HeadlessResponse{
+				Content: domResponse.OuterHTML,
+				Status:  responseReply.Response.Status,
+				Headers: responseHeaders,
+			}
+
+			return ret, nil
+		case <-ctx.Done():
+			return nil, fmt.Errorf("reponse timeout from headless chrome")
+		}
 	}
-
-	responseHeaders := make(map[string]string)
-	err = json.Unmarshal(responseReply.Response.Headers, &responseHeaders)
-	if err != nil {
-		return nil, err
-	}
-
-	ret := &HeadlessResponse{
-		Content: domResponse.OuterHTML,
-		Status:  responseReply.Response.Status,
-		Headers: responseHeaders,
-	}
-
-	return ret, nil
 }
