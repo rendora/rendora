@@ -95,7 +95,7 @@ func checkHeadless(arg string) error {
 //NewHeadlessClient creates HeadlessClient
 func (R *Rendora) newHeadlessClient() error {
 	ret := &headlessClient{
-		Mtx: &sync.Mutex{},
+		Mtx:     &sync.Mutex{},
 		rendora: R,
 	}
 	ctx := context.Background()
@@ -226,7 +226,6 @@ func (c *headlessClient) getResponse(uri string) (*HeadlessResponse, error) {
 	elapsed := float64(time.Since(timeStart)) / float64(time.Duration(1*time.Millisecond))
 
 	if c.rendora.c.Server.Enable {
-		
 		c.rendora.metrics.Duration.Observe(elapsed)
 	}
 
@@ -235,9 +234,16 @@ func (c *headlessClient) getResponse(uri string) (*HeadlessResponse, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	var status int
+	if responseReply.Response.Status == 304 {
+		status = 200
+	} else {
+		status = responseReply.Response.Status
+	}
 	ret := &HeadlessResponse{
-		Content:    domResponse.OuterHTML,
-		Status:  responseReply.Response.Status,
+		Content: domResponse.OuterHTML,
+		Status:  status,
 		Headers: responseHeaders,
 		Latency: elapsed,
 	}
