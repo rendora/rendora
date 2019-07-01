@@ -156,10 +156,14 @@ func (R *Rendora) newHeadlessClient() error {
 		return err
 	}
 
+	err = ret.C.Network.SetCacheDisabled(ctx, network.NewSetCacheDisabledArgs(R.c.Headless.CacheDisabled));
+	if err != nil {
+		return err
+ 	}
+
 	blockedURLs := network.NewSetBlockedURLsArgs(defaultBlockedURLs)
 
 	err = ret.C.Network.SetBlockedURLs(ctx, blockedURLs)
-
 	if err != nil {
 		return err
 	}
