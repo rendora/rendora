@@ -6,7 +6,9 @@ services:
     tmpfs:
       - /tmp
   rendora:
-    image: rendora/rendora
+    image: paulwang/rendora:latest
+    depends_on:
+      - headless
     network_mode: 'host'
     volumes:
       - ./config.yml:/etc/rendora/config.yml
