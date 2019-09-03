@@ -1,4 +1,4 @@
-FROM golang:1.12.8
+FROM golang:1.13rc2
 WORKDIR /app
 COPY . /app
 ENV GOPROXY=https://goproxy.io

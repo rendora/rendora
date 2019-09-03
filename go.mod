@@ -9,11 +9,8 @@ require (
 	github.com/go-redis/redis v6.14.2+incompatible
 	github.com/gogo/protobuf v1.2.0 // indirect
 	github.com/google/go-cmp v0.2.0 // indirect
-	github.com/google/pprof v0.0.0-20190109223431-e84dfd68c163 // indirect
 	github.com/gorilla/websocket v1.4.0 // indirect
-	github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/json-iterator/go v1.1.6
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mafredri/cdp v0.20.0
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
@@ -33,3 +30,5 @@ require (
 	golang.org/x/sync v0.0.0-20181108010431-42b317875d0f
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 )
+
+go 1.13
