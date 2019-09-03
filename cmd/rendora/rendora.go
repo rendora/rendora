@@ -19,14 +19,17 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
+	"strings"
 	"time"
 
+	"github.com/gin-contrib/static"
+	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/rendora/rendora/cmd/rendora/middleware"
 	"github.com/rendora/rendora/config"
 	"github.com/rendora/rendora/service"
 	"github.com/spf13/cobra"
-
-	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -146,8 +149,8 @@ func (r *rendora) initProxyServer() *http.Server {
 func (r *rendora) initStaticServer() *http.Server {
 	router := gin.New()
 	router.Use(r.middleware())
-	router.Static("/", r.c.StaticDir)
-
+	router.Use(static.Serve("/", static.LocalFile(r.c.StaticDir, false)))
+	router.NoRoute(middleware.Index(strings.Join([]string{r.c.StaticDir, "index.html"}, string(os.PathSeparator))))
 	srv := &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", r.c.Listen.Address, r.c.Listen.Port),
 		Handler:      router,
