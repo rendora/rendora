@@ -26,7 +26,7 @@ require (
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/viper v1.2.1
 	github.com/tdewolff/minify/v2 v2.3.8
-	github.com/ugorji/go/codec v0.0.0-20181022190402-e5e69e061d4f // indirect
+	github.com/ugorji/go v1.1.7 // indirect
 	golang.org/x/sync v0.0.0-20181108010431-42b317875d0f
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 )
