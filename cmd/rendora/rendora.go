@@ -33,6 +33,8 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+const timeout  = 30
+
 var (
 	g errgroup.Group
 )
@@ -139,8 +141,8 @@ func (r *rendora) initProxyServer() *http.Server {
 	srv := &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", r.c.Listen.Address, r.c.Listen.Port),
 		Handler:      router,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  timeout * time.Second,
+		WriteTimeout: timeout * time.Second,
 	}
 
 	return srv
@@ -154,8 +156,8 @@ func (r *rendora) initStaticServer() *http.Server {
 	srv := &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", r.c.Listen.Address, r.c.Listen.Port),
 		Handler:      router,
-		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 30 * time.Second,
+		ReadTimeout:  timeout * time.Second,
+		WriteTimeout: timeout * time.Second,
 	}
 
 	return srv
@@ -180,8 +182,8 @@ func (r *rendora) initRendoraServer() *http.Server {
 	srv := &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", r.c.Server.Listen.Address, r.c.Server.Listen.Port),
 		Handler:      router,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  timeout * time.Second,
+		WriteTimeout: timeout * time.Second,
 	}
 
 	return srv
