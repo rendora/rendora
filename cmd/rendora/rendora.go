@@ -133,7 +133,7 @@ func (r *rendora) run() error {
 }
 
 func (r *rendora) initProxyServer() *http.Server {
-	router := gin.New()
+	router := gin.Default()
 	router.Use(r.middleware())
 
 	srv := &http.Server{
@@ -147,7 +147,7 @@ func (r *rendora) initProxyServer() *http.Server {
 }
 
 func (r *rendora) initStaticServer() *http.Server {
-	router := gin.New()
+	router := gin.Default()
 	router.Use(r.middleware())
 	router.Use(static.Serve("/", static.LocalFile(r.c.StaticDir, false)))
 	router.NoRoute(middleware.Index(strings.Join([]string{r.c.StaticDir, "index.html"}, string(os.PathSeparator))))
@@ -162,7 +162,7 @@ func (r *rendora) initStaticServer() *http.Server {
 }
 
 func (r *rendora) initRendoraServer() *http.Server {
-	router := gin.New()
+	router := gin.Default()
 	router.Use(func(c *gin.Context) {
 		if r.c.Server.Auth.Enable {
 			if c.Request.Header.Get(r.c.Server.Auth.Name) != r.c.Server.Auth.Value {
