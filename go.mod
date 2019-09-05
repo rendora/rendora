@@ -4,6 +4,8 @@ require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf
 	github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973 // indirect
+	github.com/chromedp/cdproto v0.0.0-20190812224334-39ef923dcb8d
+	github.com/chromedp/chromedp v0.4.0
 	github.com/gin-contrib/static v0.0.0-20190511124741-c1cdf9c9ec7b
 	github.com/gin-gonic/gin v1.4.0
 	github.com/go-redis/redis v6.14.2+incompatible

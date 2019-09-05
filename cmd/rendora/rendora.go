@@ -33,7 +33,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-const timeout  = 30
+const timeout = 30
 
 var (
 	g errgroup.Group
@@ -86,6 +86,7 @@ func new(cfgFile string) (*rendora, error) {
 	}
 
 	headlessClient, err := service.NewHeadlessClient(&service.HeadlessConfig{
+		UserAgent:   rendora.c.Headless.UserAgent,
 		Mode:        rendora.c.Headless.Mode,
 		URL:         rendora.c.Headless.URL,
 		AuthToken:   rendora.c.Headless.AuthToken,
