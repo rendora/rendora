@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -34,7 +33,10 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-const timeout = 30
+const (
+	timeout      = 30
+	defaultIndex = "index.html"
+)
 
 var (
 	g errgroup.Group
@@ -109,17 +111,13 @@ func new(cfgFile string) (*rendora, error) {
 	return rendora, nil
 }
 
-//Run starts Rendora proxy nd API (if enabled) servers
+//Run starts Rendora and API (if enabled) servers
 func (r *rendora) run() error {
 	if r.c.Debug == false {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
 	g.Go(func() error {
-		if r.c.Proxy {
-			return r.initProxyServer().ListenAndServe()
-		}
-
 		return r.initStaticServer().ListenAndServe()
 	})
 
@@ -136,25 +134,11 @@ func (r *rendora) run() error {
 	return nil
 }
 
-func (r *rendora) initProxyServer() *http.Server {
-	router := gin.Default()
-	router.Use(r.middleware())
-
-	srv := &http.Server{
-		Addr:         fmt.Sprintf("%s:%d", r.c.Listen.Address, r.c.Listen.Port),
-		Handler:      router,
-		ReadTimeout:  timeout * time.Second,
-		WriteTimeout: timeout * time.Second,
-	}
-
-	return srv
-}
-
 func (r *rendora) initStaticServer() *http.Server {
 	router := gin.Default()
 	router.Use(r.middleware())
 	router.Use(static.Serve("/", static.LocalFile(r.c.StaticDir, false)))
-	router.NoRoute(middleware.Index(strings.Join([]string{r.c.StaticDir, "index.html"}, string(os.PathSeparator))))
+	router.NoRoute(middleware.Index(strings.Join([]string{r.c.StaticDir, defaultIndex}, string(os.PathSeparator))))
 	srv := &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", r.c.Listen.Address, r.c.Listen.Port),
 		Handler:      router,
@@ -191,47 +175,19 @@ func (r *rendora) initRendoraServer() *http.Server {
 	return srv
 }
 
-func (r *rendora) getProxy(c *gin.Context) {
-	director := func(req *http.Request) {
-		req.Host = r.backendURL.Host
-		req.URL.Scheme = r.backendURL.Scheme
-		req.URL.Host = r.backendURL.Host
-		req.RequestURI = c.Request.RequestURI
-	}
-
-	proxy := &httputil.ReverseProxy{Director: director}
-	proxy.ServeHTTP(c.Writer, c.Request)
-}
-
 func (r *rendora) middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.Method != http.MethodGet {
-			if r.c.Proxy {
-				r.getProxy(c)
-			}
-
-			return
-		}
-
-		if c.Request.Header.Get("X-Rendora-Type") == "RENDER" {
-			if r.c.Proxy {
-				r.getProxy(c)
-			}
-
 			return
 		}
 
 		if r.isWhitelisted(c) {
 			ext := filepath.Ext(c.Request.RequestURI)
-			if ext != "" && ext != ".html" {
+			if ext != "" && ext != filepath.Ext(defaultIndex) {
 				return
 			}
 
 			r.getSSR(c)
-		} else {
-			if r.c.Proxy {
-				r.getProxy(c)
-			}
 		}
 
 		if r.c.Server.Enable {
