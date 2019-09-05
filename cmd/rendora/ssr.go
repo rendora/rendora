@@ -141,7 +141,7 @@ func (r *rendora) getSSR(c *gin.Context) {
 	}
 
 	c.Header("Content-Type", contentHdr.(string))
-	c.String(int(resp.Status), resp.Content)
+	c.String(http.StatusOK, resp.Content)
 
 	if r.c.Server.Enable {
 		r.metrics.CountSSR.Inc()
