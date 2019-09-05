@@ -37,6 +37,7 @@ type RendoraConfig struct {
 	} `mapstructure:"target"`
 
 	Headless struct {
+		UserAgent   string   `mapstructure:"userAgent"`
 		Mode        string   `valid:"in(default|internal|external)"`
 		URL         string   `valid:"requrl"`
 		AuthToken   string   `mapstructure:"authToken"`
@@ -119,8 +120,9 @@ func New(cfgFile string) (*RendoraConfig, error) {
 	viper.SetDefault("cache.redis.password", "")
 	viper.SetDefault("cache.redis.db", 0)
 	viper.SetDefault("output.minify", false)
+	viper.SetDefault("headless.userAgent", "bilingo-ssr")
 	viper.SetDefault("headless.mode", "default")
-	viper.SetDefault("headless.timeout", 15)
+	viper.SetDefault("headless.timeout", 30)
 	viper.SetDefault("headless.internal.url", "http://localhost:9222")
 	viper.SetDefault("filters.useragent.defaultPolicy", "blacklist")
 	viper.SetDefault("filters.paths.defaultPolicy", "whitelist")

@@ -15,42 +15,36 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"net/url"
-	"sync"
 	"time"
 
-	"github.com/mafredri/cdp"
+	"github.com/chromedp/cdproto/dom"
+	"github.com/chromedp/chromedp"
+	"github.com/chromedp/chromedp/device"
 	"github.com/mafredri/cdp/devtool"
-	"github.com/mafredri/cdp/protocol/dom"
-	"github.com/mafredri/cdp/protocol/network"
-	"github.com/mafredri/cdp/protocol/page"
-	"github.com/mafredri/cdp/rpcc"
 )
 
 // HeadlessClient contains the info of the headless client, most importantly the cdp.Client
 type HeadlessClient struct {
-	RPCConn *rpcc.Conn
-	C       *cdp.Client
-	Mtx     *sync.Mutex
-	Cfg     *HeadlessConfig
+	Ctx context.Context
+	Cfg *HeadlessConfig
 }
 
 //HeadlessResponse contains the status code, DOM content and headers of the response coming from the headless chrome instance
 type HeadlessResponse struct {
-	Status  int               `json:"status"`
-	Content string            `json:"content"`
-	Headers map[string]string `json:"headers"`
-	Latency float64           `json:"latency"`
+	Status  int64                  `json:"status"`
+	Content string                 `json:"content"`
+	Headers map[string]interface{} `json:"headers"`
+	Latency float64                `json:"latency"`
 }
 
 // HeadlessConfig headless's config
 type HeadlessConfig struct {
+	UserAgent   string
 	Mode        string
 	URL         string
 	AuthToken   string
@@ -99,24 +93,22 @@ func checkHeadless(arg string) error {
 		if err == nil {
 			return nil
 		}
-		log.Println("Cannot connect to the headless Chrome instance, trying again after 2 seconds...")
+		log.Println("cannot connect to the headless Chrome instance, trying again after 2 seconds...")
 		time.Sleep(2 * time.Second)
 	}
 	err := doCheck()
 	if err == nil {
 		return nil
 	}
-	return errors.New("Cannot connect to the headless Chrome instance, make sure it is running")
+	return errors.New("cannot connect to the headless Chrome instance, make sure it is running")
 
 }
 
 //NewHeadlessClient creates HeadlessClient
 func NewHeadlessClient(cfg *HeadlessConfig) (*HeadlessClient, error) {
 	ret := &HeadlessClient{
-		Mtx: &sync.Mutex{},
 		Cfg: cfg,
 	}
-	ctx := context.Background()
 
 	err := checkHeadless(cfg.InternalURL)
 	if err != nil {
@@ -129,132 +121,50 @@ func NewHeadlessClient(cfg *HeadlessConfig) (*HeadlessClient, error) {
 		return nil, err
 	}
 
-	devt := devtool.New(resolvedURL)
-	pt, err := devt.Get(ctx, devtool.Page)
+	ctx := context.Background()
+	devTools := devtool.New(resolvedURL)
+	pt, err := devTools.Get(ctx, devtool.Page)
 	if err != nil {
-		pt, err = devt.Create(ctx)
+		pt, err = devTools.Create(ctx)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	ret.RPCConn, err = rpcc.DialContext(ctx, pt.WebSocketDebuggerURL)
-	if err != nil {
-		return nil, err
-	}
+	allocCtx, _ := chromedp.NewRemoteAllocator(ctx, pt.WebSocketDebuggerURL)
 
-	ret.C = cdp.NewClient(ret.RPCConn)
+	// create chrome instance
+	taskCtx, _ := chromedp.NewContext(
+		allocCtx,
+	)
 
-	domContent, err := ret.C.Page.DOMContentEventFired(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer domContent.Close()
-
-	if err = ret.C.Page.Enable(ctx); err != nil {
-		return nil, err
-	}
-
-	err = ret.C.Network.Enable(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	headers := map[string]string{
-		"X-Rendora-Type": "RENDER",
-	}
-
-	headersStr, err := json.Marshal(headers)
-	if err != nil {
-		return nil, err
-	}
-
-	err = ret.C.Network.SetExtraHTTPHeaders(ctx, network.NewSetExtraHTTPHeadersArgs(headersStr))
-	if err != nil {
-		return nil, err
-	}
-
-	blockedURLs := network.NewSetBlockedURLsArgs(cfg.BlockedURLs)
-
-	err = ret.C.Network.SetBlockedURLs(ctx, blockedURLs)
-
-	if err != nil {
-		return nil, err
-	}
+	ret.Ctx = taskCtx
 
 	return ret, nil
 }
 
 // GetResponse GoTo navigates to the url, fetches the DOM and returns HeadlessResponse
 func (c *HeadlessClient) GetResponse(uri string) (*HeadlessResponse, error) {
-	c.Mtx.Lock()
-	defer c.Mtx.Unlock()
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.Cfg.Timeout)*time.Second)
-	defer cancel()
-
-	navArgs := page.NewNavigateArgs(uri)
-	networkResponse, err := c.C.Network.ResponseReceived(ctx)
+	var res string
+	err := chromedp.Run(c.Ctx, c.scrapIt(uri, &res))
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = c.C.Page.Navigate(ctx, navArgs)
-	if err != nil {
-		return nil, err
-	}
+	return &HeadlessResponse{Content: res}, nil
+}
 
-	responseReply, err := networkResponse.Recv()
-	if err != nil {
-		return nil, err
-	}
-
-	domContent, err := c.C.Page.DOMContentEventFired(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer domContent.Close()
-
-	loadEventFired, err := c.C.Page.LoadEventFired(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer loadEventFired.Close()
-
-	for {
-		select {
-		case <-domContent.Ready():
-			if _, err = domContent.Recv(); err != nil {
-				return nil, err
-			}
-		case <-loadEventFired.Ready():
-			doc, err := c.C.DOM.GetDocument(ctx, nil)
+func (c *HeadlessClient) scrapIt(url string, str *string) chromedp.Tasks {
+	return chromedp.Tasks{
+		chromedp.Emulate(device.Info{UserAgent: c.Cfg.UserAgent}),
+		chromedp.Navigate(url),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			node, err := dom.GetDocument().Do(ctx)
 			if err != nil {
-				return nil, err
+				return err
 			}
-
-			domResponse, err := c.C.DOM.GetOuterHTML(ctx, &dom.GetOuterHTMLArgs{
-				NodeID: &doc.Root.NodeID,
-			})
-			if err != nil {
-				return nil, err
-			}
-
-			responseHeaders := make(map[string]string)
-			err = json.Unmarshal(responseReply.Response.Headers, &responseHeaders)
-			if err != nil {
-				return nil, err
-			}
-
-			ret := &HeadlessResponse{
-				Content: domResponse.OuterHTML,
-				Status:  responseReply.Response.Status,
-				Headers: responseHeaders,
-			}
-
-			return ret, nil
-		case <-ctx.Done():
-			return nil, fmt.Errorf("reponse timeout from headless chrome")
-		}
+			*str, err = dom.GetOuterHTML().WithNodeID(node.NodeID).Do(ctx)
+			return err
+		}),
 	}
 }
