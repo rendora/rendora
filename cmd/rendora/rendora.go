@@ -20,6 +20,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -204,6 +205,11 @@ func (r *rendora) getProxy(c *gin.Context) {
 
 func (r *rendora) middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ext := filepath.Ext(c.Request.RequestURI)
+		if ext != "" && ext != ".html" {
+			return
+		}
+
 		if c.Request.Method != http.MethodGet {
 			if r.c.Proxy {
 				r.getProxy(c)
