@@ -205,11 +205,6 @@ func (r *rendora) getProxy(c *gin.Context) {
 
 func (r *rendora) middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ext := filepath.Ext(c.Request.RequestURI)
-		if ext != "" && ext != ".html" {
-			return
-		}
-
 		if c.Request.Method != http.MethodGet {
 			if r.c.Proxy {
 				r.getProxy(c)
@@ -227,6 +222,11 @@ func (r *rendora) middleware() gin.HandlerFunc {
 		}
 
 		if r.isWhitelisted(c) {
+			ext := filepath.Ext(c.Request.RequestURI)
+			if ext != "" && ext != ".html" {
+				return
+			}
+
 			r.getSSR(c)
 		} else {
 			if r.c.Proxy {
