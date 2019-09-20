@@ -14,6 +14,7 @@ limitations under the License.
 package rendora
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"time"
@@ -85,14 +86,23 @@ func (r *rendora) getHeadless(uri string) (*service.HeadlessResponse, error) {
 		r.metrics.Duration.Observe(elapsed)
 	}
 
-	headlessResponse, err := r.h.GetResponse(r.c.Target.URL + uri)
+	h, err := r.hp.Get()
 	if err != nil {
 		return nil, err
 	}
+	defer r.hp.Put(h)
 
-	headlessResponse.Latency = elapsed
+	if v, ok := h.(*service.HeadlessClient); ok {
+		headlessResponse, err := v.GetResponse(r.c.Target.URL + uri)
+		if err != nil {
+			return nil, err
+		}
 
-	return headlessResponse, nil
+		headlessResponse.Latency = elapsed
+		return headlessResponse, nil
+	}
+
+	return nil, errors.New("assert headless client error")
 }
 
 func (r *rendora) getResponse(uri string) (*service.HeadlessResponse, error) {

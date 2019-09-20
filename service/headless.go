@@ -143,6 +143,12 @@ func NewHeadlessClient(cfg *HeadlessConfig) (*HeadlessClient, error) {
 	return ret, nil
 }
 
+// Close close connection
+func (c *HeadlessClient) Close() error {
+	c.Ctx.Done()
+	return nil
+}
+
 // GetResponse GoTo navigates to the url, fetches the DOM and returns HeadlessResponse
 func (c *HeadlessClient) GetResponse(uri string) (*HeadlessResponse, error) {
 	var res string

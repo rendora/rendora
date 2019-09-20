@@ -24,6 +24,7 @@ require (
 	github.com/prometheus/client_model v0.0.0-20180712105110-5c3871d89910 // indirect
 	github.com/prometheus/common v0.0.0-20181126121408-4724e9255275 // indirect
 	github.com/prometheus/procfs v0.0.0-20181126161756-619930b0b471 // indirect
+	github.com/silenceper/pool v0.0.0-20190419103246-92cc9e6ec7b8
 	github.com/spf13/cast v1.3.0 // indirect
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/viper v1.2.1
