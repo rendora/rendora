@@ -111,4 +111,6 @@ func (r *rendora) getSSR(c *gin.Context) {
 	if r.c.Server.Enable {
 		r.metrics.CountSSR.Inc()
 	}
+
+	c.Abort()
 }
