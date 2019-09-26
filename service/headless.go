@@ -49,7 +49,7 @@ type HeadlessConfig struct {
 	URL         string
 	AuthToken   string
 	BlockedURLs []string
-	Timeout     uint16
+	Timeout     int64
 	InternalURL string
 }
 
@@ -152,7 +152,10 @@ func (c *HeadlessClient) Close() error {
 // GetResponse GoTo navigates to the url, fetches the DOM and returns HeadlessResponse
 func (c *HeadlessClient) GetResponse(uri string) (*HeadlessResponse, error) {
 	var res string
-	err := chromedp.Run(c.Ctx, c.scrapIt(uri, &res))
+	timeoutCtx, cancel := context.WithTimeout(c.Ctx, time.Duration(c.Cfg.Timeout)*time.Second)
+	defer cancel()
+
+	err := chromedp.Run(timeoutCtx, c.scrapIt(uri, &res))
 	if err != nil {
 		return nil, err
 	}
