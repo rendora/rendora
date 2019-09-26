@@ -31,51 +31,6 @@ type reqBody struct {
 	URL string `json:"url"`
 }
 
-/*
-func getHeadlessExternal(uri string) (*HeadlessResponse, error) {
-	client := &http.Client{}
-	bd := reqBody{
-		URL: Rendora.C.Target.URL + uri,
-	}
-
-	s, err := json.Marshal(bd)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodGet, Rendora.C.Headless.URL+"/pages", bytes.NewBuffer(s))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Rendora-Auth", Rendora.C.Headless.AuthToken)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("unsuccessful result with code:  %d", resp.StatusCode)
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	var ret HeadlessResponse
-	err = json.Unmarshal(body, &ret)
-	if err != nil {
-		return nil, err
-	}
-
-	return &ret, nil
-}
-
-*/
-
 var targetURL string
 
 func (r *rendora) getHeadless(uri string) (*service.HeadlessResponse, error) {
