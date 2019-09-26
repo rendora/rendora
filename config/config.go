@@ -27,9 +27,6 @@ type RendoraConfig struct {
 		Address string `valid:"ip"`
 		Port    uint16 `valid:"range(1|65535)"`
 	}
-	Backend struct {
-		URL string `valid:"required,requrl"`
-	} `mapstructure:"backend"`
 
 	Target struct {
 		URL string `valid:"required,requrl"`

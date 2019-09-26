@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -45,12 +44,11 @@ var (
 
 //Rendora contains the main structure instance
 type rendora struct {
-	c          *config.RendoraConfig
-	cache      *service.Store
-	backendURL *url.URL
-	metrics    *service.Metrics
-	hp         pool.Pool
-	cfgFile    string
+	c       *config.RendoraConfig
+	cache   *service.Store
+	metrics *service.Metrics
+	hp      pool.Pool
+	cfgFile string
 }
 
 //new creates a new Rendora instance
@@ -83,11 +81,6 @@ func new(cfgFile string) (*rendora, error) {
 			KeyPrefix: rendora.c.Cache.Redis.KeyPrefix,
 		},
 	})
-
-	rendora.backendURL, err = url.Parse(rendora.c.Backend.URL)
-	if err != nil {
-		return nil, err
-	}
 
 	headlessClientPool, err := service.NewHeadlessClientPool(&service.HeadlessConfig{
 		UserAgent:   rendora.c.Headless.UserAgent,
