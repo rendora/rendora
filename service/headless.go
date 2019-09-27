@@ -22,7 +22,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/chromedp"
 	"github.com/chromedp/chromedp/device"
 	"github.com/mafredri/cdp/devtool"
@@ -168,14 +167,6 @@ func (c *HeadlessClient) scrapIt(url string, str *string) chromedp.Tasks {
 	return chromedp.Tasks{
 		chromedp.Emulate(device.Info{UserAgent: c.Cfg.UserAgent}),
 		chromedp.Navigate(url),
-		chromedp.Sleep(2 * time.Second),
-		chromedp.ActionFunc(func(ctx context.Context) error {
-			node, err := dom.GetDocument().Do(ctx)
-			if err != nil {
-				return err
-			}
-			*str, err = dom.GetOuterHTML().WithNodeID(node.NodeID).Do(ctx)
-			return err
-		}),
+		chromedp.OuterHTML(c.Cfg.WaitReadyNode, str),
 	}
 }
