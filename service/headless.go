@@ -44,13 +44,14 @@ type HeadlessResponse struct {
 
 // HeadlessConfig headless's config
 type HeadlessConfig struct {
-	UserAgent   string
-	Mode        string
-	URL         string
-	AuthToken   string
-	BlockedURLs []string
-	Timeout     int64
-	InternalURL string
+	UserAgent     string
+	Mode          string
+	URL           string
+	AuthToken     string
+	BlockedURLs   []string
+	Timeout       int64
+	InternalURL   string
+	WaitReadyNode string
 }
 
 func resolveURLHostname(arg string) (string, error) {
@@ -167,6 +168,7 @@ func (c *HeadlessClient) scrapIt(url string, str *string) chromedp.Tasks {
 	return chromedp.Tasks{
 		chromedp.Emulate(device.Info{UserAgent: c.Cfg.UserAgent}),
 		chromedp.Navigate(url),
+		chromedp.Sleep(2 * time.Second),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			node, err := dom.GetDocument().Do(ctx)
 			if err != nil {

@@ -15,6 +15,7 @@ target:
 headless:
     internal:
       url: http://headless:9222
+    waitReadyNode: 'footer'
 
 output:
     minify: true

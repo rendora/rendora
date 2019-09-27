@@ -15,6 +15,7 @@ package rendora
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -96,6 +97,7 @@ func (r *rendora) getResponse(uri string) (*service.HeadlessResponse, error) {
 func (r *rendora) getSSR(c *gin.Context) {
 	resp, err := r.getResponse(c.Request.RequestURI)
 	if err != nil {
+		fmt.Printf("get ssr error: %s:", err.Error())
 		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}

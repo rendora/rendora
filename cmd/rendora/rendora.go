@@ -83,13 +83,14 @@ func new(cfgFile string) (*rendora, error) {
 	})
 
 	headlessClientPool, err := service.NewHeadlessClientPool(&service.HeadlessConfig{
-		UserAgent:   rendora.c.Headless.UserAgent,
-		Mode:        rendora.c.Headless.Mode,
-		URL:         rendora.c.Headless.URL,
-		AuthToken:   rendora.c.Headless.AuthToken,
-		BlockedURLs: rendora.c.Headless.BlockedURLs,
-		Timeout:     rendora.c.Headless.Timeout,
-		InternalURL: rendora.c.Headless.Internal.URL,
+		UserAgent:     rendora.c.Headless.UserAgent,
+		Mode:          rendora.c.Headless.Mode,
+		URL:           rendora.c.Headless.URL,
+		AuthToken:     rendora.c.Headless.AuthToken,
+		BlockedURLs:   rendora.c.Headless.BlockedURLs,
+		Timeout:       rendora.c.Headless.Timeout,
+		InternalURL:   rendora.c.Headless.Internal.URL,
+		WaitReadyNode: rendora.c.Headless.WaitReadyNode,
 	})
 	if err != nil {
 		return nil, err
