@@ -22,8 +22,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/chromedp/chromedp"
 	"github.com/chromedp/chromedp/device"
+
+	"github.com/chromedp/chromedp"
 	"github.com/mafredri/cdp/devtool"
 )
 
@@ -165,7 +166,7 @@ func (c *HeadlessClient) GetResponse(uri string) (*HeadlessResponse, error) {
 
 func (c *HeadlessClient) scrapIt(url string, str *string) chromedp.Tasks {
 	return chromedp.Tasks{
-		chromedp.Emulate(device.Info{UserAgent: c.Cfg.UserAgent}),
+		chromedp.Emulate(device.Info{UserAgent: c.Cfg.UserAgent, Width: 1440, Height: 1000}),
 		chromedp.Navigate(url),
 		chromedp.OuterHTML(c.Cfg.WaitReadyNode, str),
 	}
