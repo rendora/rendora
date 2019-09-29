@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/rendora/rendora/utils"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -44,7 +46,7 @@ func Check(ctx *gin.Context) {
 		}
 
 		var data TemplateData
-		switch getLang(ctx) {
+		switch utils.GetLang(ctx) {
 		case zhCN:
 			data = TemplateData{
 				Title:              "问答 - 双语帮",
@@ -104,23 +106,4 @@ func isOldBrowser(ctx *gin.Context) bool {
 	}
 
 	return false
-}
-
-// getLang 获取当前语言
-func getLang(ctx *gin.Context) string {
-	lang, err := ctx.Cookie("lnk_lang")
-	if err != nil {
-		lang = ""
-	}
-
-	if lang == "" {
-		acceptLanguage := ctx.GetHeader("accept-Language")
-		if strings.Contains(acceptLanguage, zhCN) {
-			lang = zhCN
-		} else {
-			lang = enUS
-		}
-	}
-
-	return lang
 }
