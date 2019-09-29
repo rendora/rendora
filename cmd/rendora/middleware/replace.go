@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"html/template"
 	"net/http"
+	"path/filepath"
 	"strconv"
 
 	"github.com/rendora/rendora/utils"
@@ -84,7 +85,8 @@ func getTemplateData(lang string) (td TemplateData) {
 // ReplaceHTML replace index page's data.
 func ReplaceHTML() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if c.Request.URL.Path == "/" && c.Request.Method == http.MethodGet {
+		ext := filepath.Ext(c.Request.RequestURI)
+		if ext == "" && c.Request.Method == http.MethodGet {
 			c.Writer = &replaceWriter{
 				ResponseWriter: c.Writer,
 			}
