@@ -132,7 +132,7 @@ func (r *rendora) run() error {
 
 func (r *rendora) initStaticServer() *http.Server {
 	router := gin.Default()
-	router.Use(browser.Check, r.middleware())
+	router.Use(browser.Check, r.middleware(), middleware.ReplaceHTML())
 	router.Use(static.Serve("/", static.LocalFile(r.c.StaticDir, false)))
 	router.NoRoute(middleware.Index(strings.Join([]string{r.c.StaticDir, defaultIndex}, string(os.PathSeparator))))
 	srv := &http.Server{

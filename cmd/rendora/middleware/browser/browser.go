@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"path/filepath"
 	"strings"
 
 	"github.com/rendora/rendora/utils"
@@ -27,12 +26,7 @@ type TemplateData struct {
 }
 
 func Check(ctx *gin.Context) {
-	ext := filepath.Ext(ctx.Request.RequestURI)
-	if ext != "" && ext != ".html" {
-		return
-	}
-
-	if ctx.Request.Method == http.MethodGet && isOldBrowser(ctx) {
+	if ctx.Request.URL.Path == "/" && ctx.Request.Method == http.MethodGet && isOldBrowser(ctx) {
 		content := []byte(page)
 		etag := fmt.Sprintf("%x", md5.Sum(content))
 		ctx.Header("ETag", etag)
