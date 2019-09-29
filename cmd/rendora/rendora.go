@@ -26,6 +26,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rendora/rendora/cmd/rendora/middleware"
+	"github.com/rendora/rendora/cmd/rendora/middleware/browser"
 	"github.com/rendora/rendora/config"
 	"github.com/rendora/rendora/service"
 	"github.com/silenceper/pool"
@@ -131,7 +132,7 @@ func (r *rendora) run() error {
 
 func (r *rendora) initStaticServer() *http.Server {
 	router := gin.Default()
-	router.Use(r.middleware())
+	router.Use(browser.Check, r.middleware())
 	router.GET("/sse", r.sse)
 	router.Use(static.Serve("/", static.LocalFile(r.c.StaticDir, false)))
 	router.NoRoute(middleware.Index(strings.Join([]string{r.c.StaticDir, defaultIndex}, string(os.PathSeparator))))
