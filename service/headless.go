@@ -20,6 +20,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/chromedp/chromedp/device"
@@ -152,6 +153,12 @@ func (c *HeadlessClient) Close() error {
 
 // GetResponse GoTo navigates to the url, fetches the DOM and returns HeadlessResponse
 func (c *HeadlessClient) GetResponse(uri string) (*HeadlessResponse, error) {
+	// solve google 404
+	uri = strings.ReplaceAll(uri, "+", "")
+	if !strings.Contains(uri, "?") && strings.Contains(uri, "&") {
+		uri = strings.Replace(uri, "&", "?", 1)
+	}
+
 	var res string
 	timeoutCtx, cancel := context.WithTimeout(c.Ctx, time.Duration(c.Cfg.Timeout)*time.Second)
 	defer cancel()
