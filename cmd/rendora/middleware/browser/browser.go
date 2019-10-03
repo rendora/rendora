@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"path/filepath"
 	"strings"
 
 	"github.com/rendora/rendora/utils"
@@ -26,7 +27,8 @@ type TemplateData struct {
 }
 
 func Check(ctx *gin.Context) {
-	if ctx.Request.URL.Path == "/" && ctx.Request.Method == http.MethodGet && isOldBrowser(ctx) {
+	ext := filepath.Ext(ctx.Request.RequestURI)
+	if ext == "" && ctx.Request.Method == http.MethodGet && isOldBrowser(ctx) {
 		content := []byte(page)
 		etag := fmt.Sprintf("%x", md5.Sum(content))
 		ctx.Header("ETag", etag)
@@ -91,7 +93,7 @@ func isOldBrowser(ctx *gin.Context) bool {
 	userAgent := ctx.Request.UserAgent()
 	isIE11 := strings.Contains(userAgent, "Trident") && strings.Contains(userAgent, "rv:11.0")
 	if isIE11 {
-		return false
+		return true
 	}
 
 	isIE := strings.Contains(userAgent, "compatible") && strings.Contains(userAgent, "MSIE")
