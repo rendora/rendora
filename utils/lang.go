@@ -15,10 +15,10 @@ func GetLang(ctx *gin.Context) string {
 
 	if lang == "" {
 		acceptLanguage := ctx.GetHeader("accept-Language")
-		if strings.Contains(acceptLanguage, "zh-CN") {
-			lang = "zh-CN"
-		} else {
+		if strings.Contains(acceptLanguage, "en") {
 			lang = "en-US"
+		} else {
+			lang = "zh-CN"
 		}
 	}
 
