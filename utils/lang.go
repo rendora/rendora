@@ -10,16 +10,19 @@ import (
 func GetLang(ctx *gin.Context) string {
 	lang, err := ctx.Cookie("lnk_lang")
 	if err != nil {
-		// 如果cookie中没有则从url中获取
-		lang = ctx.Query("lang")
+		lang = ""
 	}
 
 	if lang == "" {
-		acceptLanguage := ctx.GetHeader("accept-Language")
-		if strings.Contains(acceptLanguage, "en") {
-			lang = "en-US"
-		} else {
-			lang = "zh-CN"
+		// 如果cookie中没有则从url中获取
+		lang = ctx.Query("lang")
+		if lang == "" {
+			acceptLanguage := ctx.GetHeader("accept-Language")
+			if strings.Contains(acceptLanguage, "en") {
+				lang = "en-US"
+			} else {
+				lang = "zh-CN"
+			}
 		}
 	}
 
