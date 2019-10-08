@@ -53,6 +53,7 @@ type HeadlessConfig struct {
 	Timeout       int64
 	InternalURL   string
 	WaitReadyNode string
+	WaitTimeout   int64
 }
 
 func resolveURLHostname(arg string) (string, error) {
@@ -175,6 +176,7 @@ func (c *HeadlessClient) scrapIt(url string, str *string) chromedp.Tasks {
 	return chromedp.Tasks{
 		chromedp.Emulate(device.Info{UserAgent: c.Cfg.UserAgent, Width: 1440, Height: 1000}),
 		chromedp.Navigate(url),
+		chromedp.Sleep(time.Duration(c.Cfg.WaitTimeout) * time.Millisecond),
 		chromedp.OuterHTML(c.Cfg.WaitReadyNode, str),
 	}
 }

@@ -92,6 +92,7 @@ func new(cfgFile string) (*rendora, error) {
 		Timeout:       rendora.c.Headless.Timeout,
 		InternalURL:   rendora.c.Headless.Internal.URL,
 		WaitReadyNode: rendora.c.Headless.WaitReadyNode,
+		WaitTimeout:   rendora.c.Headless.WaitTimeout,
 	})
 	if err != nil {
 		return nil, err
