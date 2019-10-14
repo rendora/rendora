@@ -61,21 +61,21 @@ func getTemplateData(lang string) (td TemplateData) {
 	switch lang {
 	case "zh-Cn":
 		td = TemplateData{
-			Keywords:    "外教,直播课,免费课,美国外教,英语课,汉语课,对外汉语,HSK",
+			Keywords:    "外教,直播课,免费课,美国外教,英语课,汉语课,对外汉语,HSK,背单词,自学英语,学英语的网站,外教一对一,英语口语,在线英语,初级英语口语,英语流利说,英文翻译,免费外教",
 			Description: "英文有问题？双语帮问答栏当天解答！想练口语？双语帮天天免费外教课！想背单词？小麦大米是单词收割机！看视频？玩游戏？刷题？英文+中文，双语尽在双语帮！",
-			Title:       "问答 - 双语帮",
+			Title:       "双语帮 - 双语好，样样好",
 		}
 	case "en-US":
 		td = TemplateData{
-			Keywords:    "Questions about English, Questions about Chinese, Oral English, Spoken English, Vocabulary, HSK, Spoken Chinese, Mandarin, WheatRice, Bilingo, Bilingual",
+			Keywords:    "外教,直播课,免费课,美国外教,英语课,汉语课,对外汉语,HSK,背单词,自学英语,学英语的网站,外教一对一,英语口语,在线英语,初级英语口语,英语流利说,英文翻译,免费外教",
 			Description: "Questions? Ask Bilingo! Spoken English? Bilingo has free lessons! Vocabulary? WheatRice is your MiniApp! Videos? Games? Quizzes? Bilingo has it all, English or Chinese!",
-			Title:       "Q&A - Bilingo",
+			Title:       "Bilingo - Bilingo means better",
 		}
 	default:
 		td = TemplateData{
-			Keywords:    "外教,直播课,免费课,美国外教,英语课,汉语课,对外汉语,HSK",
+			Keywords:    "外教,直播课,免费课,美国外教,英语课,汉语课,对外汉语,HSK,背单词,自学英语,学英语的网站,外教一对一,英语口语,在线英语,初级英语口语,英语流利说,英文翻译,免费外教",
 			Description: "英文有问题？双语帮问答栏当天解答！想练口语？双语帮天天免费外教课！想背单词？小麦大米是单词收割机！看视频？玩游戏？刷题？英文+中文，双语尽在双语帮！",
-			Title:       "问答 - 双语帮",
+			Title:       "双语帮 - 双语好，样样好",
 		}
 	}
 
