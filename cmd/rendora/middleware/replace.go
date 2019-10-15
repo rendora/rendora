@@ -59,7 +59,7 @@ func (r *replaceWriter) Write(data []byte) (int, error) {
 
 func getTemplateData(lang string) (td TemplateData) {
 	switch lang {
-	case "zh-Cn":
+	case "zh-CN":
 		td = TemplateData{
 			Keywords:    "外教,直播课,免费课,美国外教,英语课,汉语课,对外汉语,HSK,背单词,自学英语,学英语的网站,外教一对一,英语口语,在线英语,初级英语口语,英语流利说,英文翻译,免费外教",
 			Description: "英文有问题？双语帮问答栏当天解答！想练口语？双语帮天天免费外教课！想背单词？小麦大米是单词收割机！看视频？玩游戏？刷题？英文+中文，双语尽在双语帮！",
