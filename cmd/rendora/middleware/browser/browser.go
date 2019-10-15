@@ -45,7 +45,7 @@ func Check(ctx *gin.Context) {
 		switch utils.GetLang(ctx) {
 		case zhCN:
 			data = TemplateData{
-				Title:              "问答 - 双语帮",
+				Title:              "双语帮 - 双语好，样样好",
 				Suggest:            "您当前使用的浏览器版本过低, 建议下载使用以下浏览器最新版本！",
 				Logo:               "https://a.links123.cn/common/imgs/ie/logo_shuangyubang@2x.png",
 				GoogleDownloadURL:  "https://www.google.cn/intl/zh-CN/chrome/",
@@ -56,7 +56,7 @@ func Check(ctx *gin.Context) {
 			}
 		case enUS:
 			data = TemplateData{
-				Title:              "Q&A - Bilingo",
+				Title:              "Bilingo - Bilingo means better",
 				Suggest:            "You need the updated versions of the following browsers to view the site properly:",
 				Logo:               "https://a.links123.cn/common/imgs/logo_en.png",
 				GoogleDownloadURL:  "https://www.google.cn/intl/en-US/chrome/",
@@ -67,7 +67,7 @@ func Check(ctx *gin.Context) {
 			}
 		default:
 			data = TemplateData{
-				Title:              "Q&A - Bilingo",
+				Title:              "Bilingo - Bilingo means better",
 				Suggest:            "You need the updated versions of the following browsers to view the site properly:",
 				Logo:               "https://a.links123.cn/common/imgs/logo_en.png",
 				GoogleDownloadURL:  "https://www.google.cn/intl/en-US/chrome/",
