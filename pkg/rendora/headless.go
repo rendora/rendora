@@ -23,6 +23,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/mafredri/cdp"
 	"github.com/mafredri/cdp/devtool"
 	"github.com/mafredri/cdp/protocol/dom"
@@ -95,7 +96,7 @@ func checkHeadless(arg string) error {
 //NewHeadlessClient creates HeadlessClient
 func (R *Rendora) newHeadlessClient() error {
 	ret := &headlessClient{
-		Mtx: &sync.Mutex{},
+		Mtx:     &sync.Mutex{},
 		rendora: R,
 	}
 	ctx := context.Background()
@@ -156,10 +157,10 @@ func (R *Rendora) newHeadlessClient() error {
 		return err
 	}
 
-	err = ret.C.Network.SetCacheDisabled(ctx, network.NewSetCacheDisabledArgs(R.c.Headless.CacheDisabled));
+	err = ret.C.Network.SetCacheDisabled(ctx, network.NewSetCacheDisabledArgs(R.c.Headless.CacheDisabled))
 	if err != nil {
 		return err
- 	}
+	}
 
 	blockedURLs := network.NewSetBlockedURLsArgs(defaultBlockedURLs)
 
@@ -206,10 +207,10 @@ func (c *headlessClient) getResponse(uri string) (*HeadlessResponse, error) {
 	}
 	defer domContent.Close()
 
-	waitUntil := c.rendora.c.Headless.WaitAfterDOMLoad
-	if waitUntil > 0 {
-		time.Sleep(time.Duration(waitUntil) * time.Millisecond)
-	}
+	// waitUntil := c.rendora.c.Headless.WaitAfterDOMLoad
+	// if waitUntil > 0 {
+	// 	time.Sleep(time.Duration(waitUntil) * time.Millisecond)
+	// }
 
 	if _, err = domContent.Recv(); err != nil {
 		return nil, err
@@ -227,10 +228,28 @@ func (c *headlessClient) getResponse(uri string) (*HeadlessResponse, error) {
 		return nil, err
 	}
 
+	//todo: get element by id, if not found -> sleep
+	elementFound := false
+	sleepTime := c.rendora.c.Headless.ElementFoundTimeout
+	selector := c.rendora.c.Headless.ElementSelector
+	for elementFound == false {
+
+		doc, err := goquery.NewDocument(uri)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		el := doc.Find(selector)
+		if len(el.Nodes) != 0 {
+			elementFound = true
+		} else {
+			time.Sleep(time.Duration(sleepTime) * time.Millisecond)
+		}
+	}
+
 	elapsed := float64(time.Since(timeStart)) / float64(time.Duration(1*time.Millisecond))
 
 	if c.rendora.c.Server.Enable {
-		
 		c.rendora.metrics.Duration.Observe(elapsed)
 	}
 
@@ -240,7 +259,7 @@ func (c *headlessClient) getResponse(uri string) (*HeadlessResponse, error) {
 		return nil, err
 	}
 	ret := &HeadlessResponse{
-		Content:    domResponse.OuterHTML,
+		Content: domResponse.OuterHTML,
 		Status:  responseReply.Response.Status,
 		Headers: responseHeaders,
 		Latency: elapsed,

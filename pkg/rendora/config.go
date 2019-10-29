@@ -52,7 +52,9 @@ type rendoraConfig struct {
 		}
 		CacheDisabled bool `mapstructure:"cacheDisabled"`
 
-		WaitAfterDOMLoad uint16 `mapstructure:"waitAfterDOMLoad" valid:"range(0|5000)"`
+		WaitAfterDOMLoad    uint16 `mapstructure:"waitAfterDOMLoad" valid:"range(0|5000)"`
+		ElementFoundTimeout uint16 `mapstructure:"elementFoundTimeout" valid:"range(0|1000)"`
+		ElementSelector     string `mapstructure:"elementSelector"`
 	} `mapstructure:"headless"`
 
 	Cache struct {
@@ -128,6 +130,8 @@ func (R *Rendora) initConfig() error {
 	viper.SetDefault("output.minify", false)
 	viper.SetDefault("headless.mode", "default")
 	viper.SetDefault("headless.waitAfterDOMLoad", 0)
+	viper.SetDefault("headless.elementFoundTimeout", 200)
+	viper.SetDefault("headless.elementSelector", "#marked-element")
 	viper.SetDefault("headless.timeout", 15)
 	viper.SetDefault("headless.internal.url", "http://localhost:9222")
 	viper.SetDefault("headless.cacheDisabled", false)
