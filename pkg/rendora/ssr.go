@@ -93,7 +93,7 @@ func (R *Rendora) getResponse(uri string) (*HeadlessResponse, error) {
 	cKey := R.c.Cache.Redis.KeyPrefix + ":" + uri
 	resp, exists, err := R.cache.get(cKey)
 
-	if err != nil {
+	if err != nil && R.c.LogsMode != "NONE" {
 		log.Println(err)
 	}
 
