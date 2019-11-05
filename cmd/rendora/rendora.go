@@ -133,7 +133,7 @@ func (r *rendora) run() error {
 
 func (r *rendora) initStaticServer() *http.Server {
 	router := gin.Default()
-	router.Use(browser.Check, r.middleware(), middleware.ReplaceHTML())
+	router.Use(r.CheckBrowser(), r.middleware(), middleware.ReplaceHTML())
 	router.Use(static.Serve("/", static.LocalFile(r.c.StaticDir, false)))
 	router.NoRoute(middleware.Index(strings.Join([]string{r.c.StaticDir, defaultIndex}, string(os.PathSeparator))))
 	srv := &http.Server{
@@ -189,6 +189,14 @@ func (r *rendora) middleware() gin.HandlerFunc {
 
 		if r.c.Server.Enable {
 			r.metrics.CountTotal.Inc()
+		}
+	}
+}
+
+func (r *rendora) CheckBrowser() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		if !r.isWhitelisted(ctx) {
+			browser.Check(ctx)
 		}
 	}
 }
