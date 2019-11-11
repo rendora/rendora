@@ -66,7 +66,7 @@ func resolveURLHostname(arg string) (string, error) {
 	return devURL.String(), nil
 }
 
-func checkHeadless(arg string) error {
+func checkHeadless(arg string, logsMode string) error {
 	doCheck := func() error {
 		resp, err := http.Get(arg + "/json/version")
 		if err != nil {
@@ -81,7 +81,9 @@ func checkHeadless(arg string) error {
 		if err == nil {
 			return nil
 		}
-		log.Println("Cannot connect to the headless Chrome instance, trying again after 2 seconds...")
+		if logsMode != "NONE" {
+			log.Println("Cannot connect to the headless Chrome instance, trying again after 2 seconds...")
+		}
 		time.Sleep(2 * time.Second)
 	}
 	err := doCheck()
@@ -95,12 +97,12 @@ func checkHeadless(arg string) error {
 //NewHeadlessClient creates HeadlessClient
 func (R *Rendora) newHeadlessClient() error {
 	ret := &headlessClient{
-		Mtx: &sync.Mutex{},
+		Mtx:     &sync.Mutex{},
 		rendora: R,
 	}
 	ctx := context.Background()
 
-	err := checkHeadless(R.c.Headless.Internal.URL)
+	err := checkHeadless(R.c.Headless.Internal.URL, R.c.LogsMode)
 	if err != nil {
 		return err
 	}
@@ -156,10 +158,14 @@ func (R *Rendora) newHeadlessClient() error {
 		return err
 	}
 
+	err = ret.C.Network.SetCacheDisabled(ctx, network.NewSetCacheDisabledArgs(R.c.Headless.CacheDisabled))
+	if err != nil {
+		return err
+	}
+
 	blockedURLs := network.NewSetBlockedURLsArgs(defaultBlockedURLs)
 
 	err = ret.C.Network.SetBlockedURLs(ctx, blockedURLs)
-
 	if err != nil {
 		return err
 	}
@@ -226,7 +232,6 @@ func (c *headlessClient) getResponse(uri string) (*HeadlessResponse, error) {
 	elapsed := float64(time.Since(timeStart)) / float64(time.Duration(1*time.Millisecond))
 
 	if c.rendora.c.Server.Enable {
-		
 		c.rendora.metrics.Duration.Observe(elapsed)
 	}
 
@@ -236,7 +241,7 @@ func (c *headlessClient) getResponse(uri string) (*HeadlessResponse, error) {
 		return nil, err
 	}
 	ret := &HeadlessResponse{
-		Content:    domResponse.OuterHTML,
+		Content: domResponse.OuterHTML,
 		Status:  responseReply.Response.Status,
 		Headers: responseHeaders,
 		Latency: elapsed,

@@ -29,6 +29,7 @@ type backend struct {
 type rendoraConfig struct {
 	HeadlessMode string `mapstructure:"headlessMode" valid:"in(default|internal|external)"`
 	Debug        bool   `mapstructure:"debug"`
+	LogsMode     string `valid:"in(ERROR|INFO|DEBUG|NONE)"`
 	Listen       struct {
 		Address string `valid:"ip"`
 		Port    uint16 `valid:"range(1|65535)"`
@@ -50,6 +51,7 @@ type rendoraConfig struct {
 		Internal    struct {
 			URL string `valid:"url"`
 		}
+		CacheDisabled bool `mapstructure:"cacheDisabled"`
 
 		WaitAfterDOMLoad uint16 `mapstructure:"waitAfterDOMLoad" valid:"range(0|5000)"`
 	} `mapstructure:"headless"`
@@ -117,6 +119,7 @@ func (R *Rendora) initConfig() error {
 	}
 
 	viper.SetDefault("debug", false)
+	viper.SetDefault("logsMode", "NONE")
 	viper.SetDefault("listen.port", 3001)
 	viper.SetDefault("listen.address", "0.0.0.0")
 	viper.SetDefault("cache.type", "local")
@@ -129,6 +132,7 @@ func (R *Rendora) initConfig() error {
 	viper.SetDefault("headless.waitAfterDOMLoad", 0)
 	viper.SetDefault("headless.timeout", 15)
 	viper.SetDefault("headless.internal.url", "http://localhost:9222")
+	viper.SetDefault("headless.cacheDisabled", false)
 	viper.SetDefault("filters.useragent.defaultPolicy", "blacklist")
 	viper.SetDefault("filters.paths.defaultPolicy", "whitelist")
 	viper.SetDefault("server.enable", "false")
@@ -168,7 +172,10 @@ func (R *Rendora) initConfig() error {
 		return err
 	}
 
-	log.Println("Configuration loaded")
+	logsMode := viper.Get("logsMode")
+	if logsMode != "NONE" {
+		log.Println("Configuration loaded")
+	}
 
 	err = R.newHeadlessClient()
 
@@ -176,7 +183,9 @@ func (R *Rendora) initConfig() error {
 		return err
 	}
 
-	log.Println("Connected to headless Chrome")
+	if logsMode != "NONE" {
+		log.Println("Connected to headless Chrome")
+	}
 
 	if R.c.Server.Enable {
 		R.initPrometheus()
