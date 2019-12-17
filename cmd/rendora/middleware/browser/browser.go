@@ -27,6 +27,8 @@ type TemplateData struct {
 }
 
 func Check(ctx *gin.Context) {
+	ctx.Next()
+
 	ext := filepath.Ext(ctx.Request.RequestURI)
 	if ext == "" && ctx.Request.Method == http.MethodGet && isOldBrowser(ctx) {
 		content := []byte(page)
