@@ -7,7 +7,7 @@ require (
 	github.com/chromedp/cdproto v0.0.0-20190812224334-39ef923dcb8d
 	github.com/chromedp/chromedp v0.4.0
 	github.com/gin-contrib/static v0.0.0-20190511124741-c1cdf9c9ec7b
-	github.com/gin-gonic/gin v1.4.0
+	github.com/gin-gonic/gin v1.5.0
 	github.com/go-redis/redis v6.14.2+incompatible
 	github.com/gogo/protobuf v1.2.0 // indirect
 	github.com/google/go-cmp v0.2.0 // indirect
@@ -29,7 +29,6 @@ require (
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/viper v1.2.1
 	github.com/tdewolff/minify/v2 v2.3.8
-	github.com/ugorji/go v1.1.7 // indirect
 	golang.org/x/sync v0.0.0-20181108010431-42b317875d0f
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 )
