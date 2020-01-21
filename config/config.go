@@ -44,6 +44,9 @@ type RendoraConfig struct {
 		}
 		WaitReadyNode string `valid:"required" mapstructure:"waitReadyNode"`
 		WaitTimeout   int64  `valid:"required" mapstructure:"waitTimeout"`
+		InitialCap    int    `valid:"required" mapstructure:"initialCap"`
+		MaxCap        int    `valid:"required" mapstructure:"maxCap"`
+		IdleTimeout   int64  `valid:"required" mapstructure:"idleTimeout"`
 	} `mapstructure:"headless"`
 
 	Cache struct {
@@ -123,6 +126,9 @@ func New(cfgFile string) (*RendoraConfig, error) {
 	viper.SetDefault("headless.internal.url", "http://localhost:9222")
 	viper.SetDefault("headless.waitReadyNode", "")
 	viper.SetDefault("headless.waitTimeout", 2000)
+	viper.SetDefault("headless.initialCap", 5)
+	viper.SetDefault("headless.maxCap", 20)
+	viper.SetDefault("headless.idleTimeout", 0)
 	viper.SetDefault("filters.useragent.defaultPolicy", "blacklist")
 	viper.SetDefault("filters.paths.defaultPolicy", "whitelist")
 	viper.SetDefault("server.enable", "false")

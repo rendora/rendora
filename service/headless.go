@@ -54,6 +54,9 @@ type HeadlessConfig struct {
 	InternalURL   string
 	WaitReadyNode string
 	WaitTimeout   int64
+	InitialCap    int
+	MaxCap        int
+	IdleTimeout   int64
 }
 
 func resolveURLHostname(arg string) (string, error) {

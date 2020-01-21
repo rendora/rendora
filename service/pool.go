@@ -1,6 +1,8 @@
 package service
 
 import (
+	"time"
+
 	"github.com/silenceper/pool"
 )
 
@@ -24,13 +26,13 @@ func NewHeadlessClientPool(cfg *HeadlessConfig) (pool.Pool, error) {
 	}
 
 	poolConfig := &pool.Config{
-		InitialCap: 10,
-		MaxCap:     20,
+		InitialCap: cfg.InitialCap,
+		MaxCap:     cfg.MaxCap,
 		Factory:    factory,
 		Close:      close,
 		Ping:       ping,
 		//连接最大空闲时间，超过该时间的连接 将会关闭，可避免空闲时连接EOF，自动失效的问题
-		IdleTimeout: 0,
+		IdleTimeout: time.Duration(cfg.IdleTimeout) * time.Second,
 	}
 
 	return pool.NewChannelPool(poolConfig)

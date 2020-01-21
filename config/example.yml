@@ -16,7 +16,9 @@ headless:
     internal:
       url: http://headless:9222
     waitReadyNode: 'footer'
-
+    initialCap: 5
+    maxCap: 10
+    idleTimeout: 3600
 output:
     minify: true
 
