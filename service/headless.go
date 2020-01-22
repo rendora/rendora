@@ -31,8 +31,9 @@ import (
 
 // HeadlessClient contains the info of the headless client, most importantly the cdp.Client
 type HeadlessClient struct {
-	Ctx context.Context
-	Cfg *HeadlessConfig
+	Ctx                           context.Context
+	Cfg                           *HeadlessConfig
+	allocCtxCancel, taskCtxCancel context.CancelFunc
 }
 
 //HeadlessResponse contains the status code, DOM content and headers of the response coming from the headless chrome instance
@@ -137,21 +138,24 @@ func NewHeadlessClient(cfg *HeadlessConfig) (*HeadlessClient, error) {
 		}
 	}
 
-	allocCtx, _ := chromedp.NewRemoteAllocator(ctx, pt.WebSocketDebuggerURL)
+	allocCtx, allocCtxCancel := chromedp.NewRemoteAllocator(ctx, pt.WebSocketDebuggerURL)
 
 	// create chrome instance
-	taskCtx, _ := chromedp.NewContext(
+	taskCtx, taskCtxCancel := chromedp.NewContext(
 		allocCtx,
 	)
 
 	ret.Ctx = taskCtx
+	ret.allocCtxCancel = allocCtxCancel
+	ret.taskCtxCancel = taskCtxCancel
 
 	return ret, nil
 }
 
 // Close close connection
 func (c *HeadlessClient) Close() error {
-	c.Ctx.Done()
+	c.allocCtxCancel()
+	c.taskCtxCancel()
 	return nil
 }
 
