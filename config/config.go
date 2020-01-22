@@ -128,7 +128,7 @@ func New(cfgFile string) (*RendoraConfig, error) {
 	viper.SetDefault("headless.waitTimeout", 2000)
 	viper.SetDefault("headless.initialCap", 5)
 	viper.SetDefault("headless.maxCap", 20)
-	viper.SetDefault("headless.idleTimeout", 0)
+	viper.SetDefault("headless.idleTimeout", 3600)
 	viper.SetDefault("filters.useragent.defaultPolicy", "blacklist")
 	viper.SetDefault("filters.paths.defaultPolicy", "whitelist")
 	viper.SetDefault("server.enable", "false")
