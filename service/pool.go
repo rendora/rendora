@@ -1,8 +1,10 @@
 package service
 
 import (
+	"context"
 	"time"
 
+	"github.com/chromedp/chromedp"
 	"github.com/silenceper/pool"
 )
 
@@ -22,7 +24,16 @@ func NewHeadlessClientPool(cfg *HeadlessConfig) (pool.Pool, error) {
 	}
 
 	ping := func(v interface{}) error {
-		return v.(*HeadlessClient).Ctx.Err()
+		hc := v.(*HeadlessClient)
+		if hc.Ctx.Err() != nil {
+			return hc.Ctx.Err()
+		}
+
+		if _, err := chromedp.DialContext(context.TODO(), hc.WsURL); err != nil {
+			return err
+		}
+
+		return nil
 	}
 
 	poolConfig := &pool.Config{

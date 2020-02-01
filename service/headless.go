@@ -33,6 +33,7 @@ import (
 type HeadlessClient struct {
 	Ctx                           context.Context
 	Cfg                           *HeadlessConfig
+	WsURL                         string
 	allocCtxCancel, taskCtxCancel context.CancelFunc
 }
 
@@ -145,6 +146,7 @@ func NewHeadlessClient(cfg *HeadlessConfig) (*HeadlessClient, error) {
 		allocCtx,
 	)
 
+	ret.WsURL = pt.WebSocketDebuggerURL
 	ret.Ctx = taskCtx
 	ret.allocCtxCancel = allocCtxCancel
 	ret.taskCtxCancel = taskCtxCancel
