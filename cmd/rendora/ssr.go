@@ -14,10 +14,15 @@ limitations under the License.
 package rendora
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/rendora/rendora/service"
@@ -38,7 +43,7 @@ func (r *rendora) getHeadless(uri string) (*service.HeadlessResponse, error) {
 	timeStart := time.Now()
 	elapsed := float64(time.Since(timeStart)) / float64(time.Duration(1*time.Millisecond))
 
-	if r.c.Server.Enable {
+	if r.c.Server.Metrics {
 		r.metrics.Duration.Observe(elapsed)
 	}
 
@@ -69,7 +74,7 @@ func (r *rendora) getResponse(uri string) (*service.HeadlessResponse, error) {
 	}
 
 	if exists {
-		if r.c.Server.Enable {
+		if r.c.Server.Metrics {
 			r.metrics.CountSSRCached.Inc()
 		}
 
@@ -110,9 +115,52 @@ func (r *rendora) getSSR(c *gin.Context) {
 	c.Header("Content-Type", contentHdr.(string))
 	c.String(http.StatusOK, resp.Content)
 
-	if r.c.Server.Enable {
+	if r.c.Server.Metrics {
 		r.metrics.CountSSR.Inc()
 	}
 
+	c.Abort()
+}
+
+func (r *rendora) getSSRFromProxy(c *gin.Context) {
+	port := strconv.Itoa(int(r.c.StaticConfig.Proxy.Port))
+	host := strings.Join([]string{r.c.StaticConfig.Proxy.Address, port}, ":")
+
+	reqURL := url.URL{
+		Scheme: r.c.StaticConfig.Proxy.Schema,
+		Host:   host,
+		Path:   "/render",
+	}
+
+	param := `{"uri":"` + c.Request.RequestURI + `"}`
+	resp, err := http.Post(reqURL.String(), "Content-Type: application/json", strings.NewReader(param))
+	if err != nil {
+		fmt.Printf("get ssr error: %s:", err.Error())
+		c.AbortWithStatus(http.StatusServiceUnavailable)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("get ssr error: %s:", err.Error())
+		c.AbortWithStatus(http.StatusServiceUnavailable)
+		return
+	}
+
+	var data = struct {
+		Status  int
+		Content string
+	}{}
+
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		fmt.Printf("get ssr error: %s:", err.Error())
+		c.AbortWithStatus(http.StatusServiceUnavailable)
+	}
+
+	c.Header("Content-Type", "text/html; charset=utf-8")
+	c.String(http.StatusOK, data.Content)
 	c.Abort()
 }

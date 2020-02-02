@@ -19,7 +19,7 @@ func (r *rendora) sse(ctx *gin.Context) {
 
 	chanStream := make(chan string, 1)
 	go func() {
-		file, err := ioutil.ReadFile(strings.Join([]string{r.c.StaticDir, versionFileName}, string(os.PathSeparator)))
+		file, err := ioutil.ReadFile(strings.Join([]string{r.c.StaticConfig.StaticDir, versionFileName}, string(os.PathSeparator)))
 		if err != nil {
 			return
 		}

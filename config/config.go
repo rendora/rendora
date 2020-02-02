@@ -20,15 +20,23 @@ import (
 
 //RendoraConfig represents the global configuration of Rendora
 type RendoraConfig struct {
-	HeadlessMode string `mapstructure:"headlessMode" valid:"in(default|internal|external)"`
 	Debug        bool   `mapstructure:"debug"`
-	StaticDir    string `mapstructure:"staticDir"`
-	Listen       struct {
-		Address string `valid:"ip"`
-		Port    uint16 `valid:"range(1|65535)"`
-	}
+	Node         string `mapstructure:"node" valid:"in(static|render|all)"`
+	StaticConfig struct {
+		StaticDir string `mapstructure:"staticDir"`
+		Listen    struct {
+			Address string `valid:"ip"`
+			Port    uint16 `valid:"range(1|65535)"`
+		}
+		Proxy struct {
+			Schema  string
+			Address string `valid:"ip"`
+			Port    uint16 `valid:"range(1|65535)"`
+		}
+	} `mapstructure:"staticConfig"`
 
-	Target struct {
+	HeadlessMode string `mapstructure:"headlessMode" valid:"in(default|internal|external)"`
+	Target       struct {
 		URL string `valid:"required,requrl"`
 	} `mapstructure:"target"`
 
@@ -87,8 +95,8 @@ type RendoraConfig struct {
 	} `mapstructure:"filters"`
 
 	Server struct {
-		Enable bool
-		Auth   struct {
+		Metrics bool
+		Auth    struct {
 			Enable bool
 			Name   string
 			Value  string
@@ -111,9 +119,13 @@ func New(cfgFile string) (*RendoraConfig, error) {
 	}
 
 	viper.SetDefault("debug", false)
-	viper.SetDefault("staticDir", "./static")
-	viper.SetDefault("listen.port", 3001)
-	viper.SetDefault("listen.address", "0.0.0.0")
+	viper.SetDefault("node", "static")
+	viper.SetDefault("staticConfig.staticDir", "./static")
+	viper.SetDefault("staticConfig.listen.port", 3001)
+	viper.SetDefault("staticConfig.listen.address", "0.0.0.0")
+	viper.SetDefault("staticConfig.proxy.schema", "http")
+	viper.SetDefault("staticConfig.proxy.port", 9242)
+	viper.SetDefault("staticConfig.proxy.address", "127.0.0.1")
 	viper.SetDefault("cache.type", "local")
 	viper.SetDefault("cache.timeout", 60*60)
 	viper.SetDefault("cache.redis.keyprefix", "__:::rendora:")
@@ -131,7 +143,7 @@ func New(cfgFile string) (*RendoraConfig, error) {
 	viper.SetDefault("headless.idleTimeout", 3600)
 	viper.SetDefault("filters.useragent.defaultPolicy", "blacklist")
 	viper.SetDefault("filters.paths.defaultPolicy", "whitelist")
-	viper.SetDefault("server.enable", "false")
+	viper.SetDefault("server.metrics", "false")
 	viper.SetDefault("server.listen.address", "0.0.0.0")
 	viper.SetDefault("server.listen.port", "9242")
 	viper.SetDefault("server.auth.enable", false)

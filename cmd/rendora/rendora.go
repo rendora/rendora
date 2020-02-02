@@ -39,6 +39,12 @@ const (
 	defaultIndex = "index.html"
 )
 
+const (
+	NodeStatic = "static"
+	NodeRender = "render"
+	NodeAll    = "all"
+)
+
 var (
 	g errgroup.Group
 )
@@ -67,47 +73,6 @@ func new(cfgFile string) (*rendora, error) {
 		cfgFile: cfgFile,
 	}
 
-	rendora.cache = service.InitCacheStore(&service.StoreConfig{
-		Type:    rendora.c.Cache.Type,
-		Timeout: rendora.c.Cache.Timeout,
-		Redis: struct {
-			Address   string
-			Password  string
-			DB        int
-			KeyPrefix string
-		}{
-			Address:   rendora.c.Cache.Redis.Address,
-			Password:  rendora.c.Cache.Redis.Password,
-			DB:        rendora.c.Cache.Redis.DB,
-			KeyPrefix: rendora.c.Cache.Redis.KeyPrefix,
-		},
-	})
-
-	headlessClientPool, err := service.NewHeadlessClientPool(&service.HeadlessConfig{
-		UserAgent:     rendora.c.Headless.UserAgent,
-		Mode:          rendora.c.Headless.Mode,
-		URL:           rendora.c.Headless.URL,
-		AuthToken:     rendora.c.Headless.AuthToken,
-		BlockedURLs:   rendora.c.Headless.BlockedURLs,
-		Timeout:       rendora.c.Headless.Timeout,
-		InternalURL:   rendora.c.Headless.Internal.URL,
-		WaitReadyNode: rendora.c.Headless.WaitReadyNode,
-		WaitTimeout:   rendora.c.Headless.WaitTimeout,
-		MaxCap:        rendora.c.Headless.MaxCap,
-		InitialCap:    c.Headless.InitialCap,
-		IdleTimeout:   c.Headless.IdleTimeout,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	rendora.hp = headlessClientPool
-	log.Println("Connected to headless Chrome")
-
-	if rendora.c.Server.Enable {
-		rendora.metrics = service.InitPrometheus()
-	}
-
 	return rendora, nil
 }
 
@@ -117,11 +82,54 @@ func (r *rendora) run() error {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	g.Go(func() error {
-		return r.initStaticServer().ListenAndServe()
-	})
+	if r.c.Node == NodeStatic || r.c.Node == NodeAll {
+		g.Go(func() error {
+			return r.initStaticServer().ListenAndServe()
+		})
+	}
 
-	if r.c.Server.Enable {
+	if r.c.Node == NodeRender || r.c.Node == NodeAll {
+		r.cache = service.InitCacheStore(&service.StoreConfig{
+			Type:    r.c.Cache.Type,
+			Timeout: r.c.Cache.Timeout,
+			Redis: struct {
+				Address   string
+				Password  string
+				DB        int
+				KeyPrefix string
+			}{
+				Address:   r.c.Cache.Redis.Address,
+				Password:  r.c.Cache.Redis.Password,
+				DB:        r.c.Cache.Redis.DB,
+				KeyPrefix: r.c.Cache.Redis.KeyPrefix,
+			},
+		})
+
+		headlessClientPool, err := service.NewHeadlessClientPool(&service.HeadlessConfig{
+			UserAgent:     r.c.Headless.UserAgent,
+			Mode:          r.c.Headless.Mode,
+			URL:           r.c.Headless.URL,
+			AuthToken:     r.c.Headless.AuthToken,
+			BlockedURLs:   r.c.Headless.BlockedURLs,
+			Timeout:       r.c.Headless.Timeout,
+			InternalURL:   r.c.Headless.Internal.URL,
+			WaitReadyNode: r.c.Headless.WaitReadyNode,
+			WaitTimeout:   r.c.Headless.WaitTimeout,
+			MaxCap:        r.c.Headless.MaxCap,
+			InitialCap:    r.c.Headless.InitialCap,
+			IdleTimeout:   r.c.Headless.IdleTimeout,
+		})
+		if err != nil {
+			return err
+		}
+
+		r.hp = headlessClientPool
+		log.Println("Connected to headless Chrome")
+
+		if r.c.Server.Metrics {
+			r.metrics = service.InitPrometheus()
+		}
+
 		g.Go(func() error {
 			return r.initRendoraServer().ListenAndServe()
 		})
@@ -137,10 +145,10 @@ func (r *rendora) run() error {
 func (r *rendora) initStaticServer() *http.Server {
 	router := gin.Default()
 	router.Use(r.CheckBrowser(), r.middleware(), middleware.ReplaceHTML())
-	router.Use(static.Serve("/", static.LocalFile(r.c.StaticDir, false)))
-	router.NoRoute(middleware.Index(strings.Join([]string{r.c.StaticDir, defaultIndex}, string(os.PathSeparator))))
+	router.Use(static.Serve("/", static.LocalFile(r.c.StaticConfig.StaticDir, false)))
+	router.NoRoute(middleware.Index(strings.Join([]string{r.c.StaticConfig.StaticDir, defaultIndex}, string(os.PathSeparator))))
 	srv := &http.Server{
-		Addr:         fmt.Sprintf("%s:%d", r.c.Listen.Address, r.c.Listen.Port),
+		Addr:         fmt.Sprintf("%s:%d", r.c.StaticConfig.Listen.Address, r.c.StaticConfig.Listen.Port),
 		Handler:      router,
 		ReadTimeout:  timeout * time.Second,
 		WriteTimeout: timeout * time.Second,
@@ -187,10 +195,14 @@ func (r *rendora) middleware() gin.HandlerFunc {
 				return
 			}
 
-			r.getSSR(c)
+			if r.c.Node == NodeAll {
+				r.getSSR(c)
+			} else {
+				r.getSSRFromProxy(c)
+			}
 		}
 
-		if r.c.Server.Enable {
+		if r.c.Server.Metrics {
 			r.metrics.CountTotal.Inc()
 		}
 	}
