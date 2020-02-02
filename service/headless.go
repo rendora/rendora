@@ -170,8 +170,7 @@ func (c *HeadlessClient) GetResponse(uri string) (*HeadlessResponse, error) {
 	}
 
 	var res string
-	timeoutCtx, cancel := context.WithTimeout(c.Ctx, time.Duration(c.Cfg.Timeout)*time.Second)
-	defer cancel()
+	timeoutCtx, _ := context.WithTimeout(c.Ctx, time.Duration(c.Cfg.Timeout)*time.Second)
 
 	err := chromedp.Run(timeoutCtx, c.scrapIt(uri, &res))
 	if err != nil {
