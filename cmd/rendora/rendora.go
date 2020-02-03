@@ -35,7 +35,7 @@ import (
 )
 
 const (
-	timeout      = 30
+	timeout      = 60
 	defaultIndex = "index.html"
 )
 
