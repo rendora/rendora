@@ -48,3 +48,7 @@ func (r *rendora) apiRender(c *gin.Context) {
 		panic(err)
 	}
 }
+
+func (r *rendora) ping(c *gin.Context) {
+	c.String(http.StatusOK, "ok")
+}

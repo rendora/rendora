@@ -170,6 +170,7 @@ func (r *rendora) initRendoraServer() *http.Server {
 
 	})
 
+	router.HEAD("/ping", r.ping)
 	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	router.POST("/render", r.apiRender)
 
