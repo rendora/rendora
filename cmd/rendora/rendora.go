@@ -40,9 +40,9 @@ const (
 )
 
 const (
-	NodeStatic = "static"
-	NodeRender = "render"
-	NodeAll    = "all"
+	nodeStatic = "static"
+	nodeRender = "render"
+	nodeAll    = "all"
 )
 
 var (
@@ -82,13 +82,13 @@ func (r *rendora) run() error {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	if r.c.Node == NodeStatic || r.c.Node == NodeAll {
+	if r.c.Node == nodeStatic || r.c.Node == nodeAll {
 		g.Go(func() error {
 			return r.initStaticServer().ListenAndServe()
 		})
 	}
 
-	if r.c.Node == NodeRender || r.c.Node == NodeAll {
+	if r.c.Node == nodeRender || r.c.Node == nodeAll {
 		r.cache = service.InitCacheStore(&service.StoreConfig{
 			Type:    r.c.Cache.Type,
 			Timeout: r.c.Cache.Timeout,
@@ -196,7 +196,7 @@ func (r *rendora) middleware() gin.HandlerFunc {
 				return
 			}
 
-			if r.c.Node == NodeAll {
+			if r.c.Node == nodeAll {
 				r.getSSR(c)
 			} else {
 				r.getSSRFromProxy(c)

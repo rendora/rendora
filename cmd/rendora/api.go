@@ -45,7 +45,7 @@ func (r *rendora) apiRender(c *gin.Context) {
 	enc := json.NewEncoder(c.Writer)
 	enc.SetEscapeHTML(false)
 	if err := enc.Encode(resp); err != nil {
-		panic(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 }
 
