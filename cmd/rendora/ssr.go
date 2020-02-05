@@ -164,3 +164,33 @@ func (r *rendora) getSSRFromProxy(c *gin.Context) {
 	c.String(http.StatusOK, data.Content)
 	c.Abort()
 }
+
+func (r *rendora) getSSRFromRendertron(c *gin.Context) {
+	port := strconv.Itoa(int(r.c.StaticConfig.Proxy.Port))
+	host := strings.Join([]string{r.c.StaticConfig.Proxy.Address, port}, ":")
+
+	reqURL := url.URL{
+		Scheme: r.c.StaticConfig.Proxy.Schema,
+		Host:   host,
+		Path:   "render/" + r.c.Target.URL + c.Request.RequestURI,
+	}
+
+	resp, err := http.Get(reqURL.String())
+	if err != nil {
+		fmt.Printf("get ssr error: %s:", err.Error())
+		c.AbortWithStatus(http.StatusServiceUnavailable)
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("get ssr error: %s:", err.Error())
+		c.AbortWithStatus(http.StatusServiceUnavailable)
+		return
+	}
+
+	c.Header("Content-Type", "text/html; charset=utf-8")
+	c.String(http.StatusOK, string(body))
+	c.Abort()
+}

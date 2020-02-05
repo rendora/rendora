@@ -45,6 +45,11 @@ const (
 	nodeAll    = "all"
 )
 
+const (
+	renderNodeRendora    = "rendora"
+	renderNodeRendertron = "rendertron"
+)
+
 var (
 	g errgroup.Group
 )
@@ -199,7 +204,14 @@ func (r *rendora) middleware() gin.HandlerFunc {
 			if r.c.Node == nodeAll {
 				r.getSSR(c)
 			} else {
-				r.getSSRFromProxy(c)
+				switch r.c.StaticConfig.Proxy.Node {
+				case renderNodeRendora:
+					r.getSSRFromProxy(c)
+				case renderNodeRendertron:
+					r.getSSRFromRendertron(c)
+				default:
+					c.String(http.StatusInternalServerError, "unsupported node type")
+				}
 			}
 		}
 

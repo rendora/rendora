@@ -29,8 +29,9 @@ type RendoraConfig struct {
 			Port    uint16 `valid:"range(1|65535)"`
 		}
 		Proxy struct {
+			Node    string `mapstructure:"node" valid:"in(rendora|rendertron)"`
 			Schema  string
-			Address string `valid:"ip"`
+			Address string
 			Port    uint16 `valid:"range(1|65535)"`
 		}
 	} `mapstructure:"staticConfig"`
@@ -123,6 +124,7 @@ func New(cfgFile string) (*RendoraConfig, error) {
 	viper.SetDefault("staticConfig.staticDir", "./static")
 	viper.SetDefault("staticConfig.listen.port", 3001)
 	viper.SetDefault("staticConfig.listen.address", "0.0.0.0")
+	viper.SetDefault("staticConfig.proxy.node", "rendora")
 	viper.SetDefault("staticConfig.proxy.schema", "http")
 	viper.SetDefault("staticConfig.proxy.port", 9242)
 	viper.SetDefault("staticConfig.proxy.address", "127.0.0.1")
