@@ -31,10 +31,10 @@ import (
 
 // HeadlessClient contains the info of the headless client, most importantly the cdp.Client
 type HeadlessClient struct {
-	Ctx                           context.Context
-	Cfg                           *HeadlessConfig
-	WsURL                         string
-	allocCtxCancel, taskCtxCancel context.CancelFunc
+	Ctx            context.Context
+	Cfg            *HeadlessConfig
+	WsURL          string
+	allocCtxCancel context.CancelFunc
 }
 
 //HeadlessResponse contains the status code, DOM content and headers of the response coming from the headless chrome instance
@@ -139,25 +139,19 @@ func NewHeadlessClient(cfg *HeadlessConfig) (*HeadlessClient, error) {
 		}
 	}
 
-	allocCtx, allocCtxCancel := chromedp.NewRemoteAllocator(ctx, pt.WebSocketDebuggerURL)
+	allocCtx, cancleAllocCtx := chromedp.NewRemoteAllocator(ctx, pt.WebSocketDebuggerURL)
 
-	// create chrome instance
-	taskCtx, taskCtxCancel := chromedp.NewContext(
-		allocCtx,
-	)
-
+	ret.Ctx = allocCtx
+	ret.allocCtxCancel = cancleAllocCtx
 	ret.WsURL = pt.WebSocketDebuggerURL
-	ret.Ctx = taskCtx
-	ret.allocCtxCancel = allocCtxCancel
-	ret.taskCtxCancel = taskCtxCancel
 
 	return ret, nil
 }
 
 // Close close connection
 func (c *HeadlessClient) Close() error {
-	c.allocCtxCancel()
-	c.taskCtxCancel()
+	// c.allocCtxCancel()
+
 	return nil
 }
 
@@ -169,8 +163,14 @@ func (c *HeadlessClient) GetResponse(uri string) (*HeadlessResponse, error) {
 		uri = strings.Replace(uri, "&", "?", 1)
 	}
 
+	// create chrome instance
+	taskCtx, _ := chromedp.NewContext(
+		c.Ctx,
+	)
+
 	var res string
-	timeoutCtx, _ := context.WithTimeout(c.Ctx, time.Duration(c.Cfg.Timeout)*time.Second)
+	timeoutCtx, cancle := context.WithTimeout(taskCtx, time.Duration(c.Cfg.Timeout)*time.Second)
+	defer cancle()
 
 	err := chromedp.Run(timeoutCtx, c.scrapIt(uri, &res))
 	if err != nil {

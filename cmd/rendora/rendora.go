@@ -29,7 +29,6 @@ import (
 	"github.com/rendora/rendora/cmd/rendora/middleware/browser"
 	"github.com/rendora/rendora/config"
 	"github.com/rendora/rendora/service"
-	"github.com/silenceper/pool"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 )
@@ -59,7 +58,7 @@ type rendora struct {
 	c       *config.RendoraConfig
 	cache   *service.Store
 	metrics *service.Metrics
-	hp      pool.Pool
+	hc      *service.HeadlessClient
 	cfgFile string
 }
 
@@ -110,7 +109,7 @@ func (r *rendora) run() error {
 			},
 		})
 
-		headlessClientPool, err := service.NewHeadlessClientPool(&service.HeadlessConfig{
+		hc, err := service.NewHeadlessClient(&service.HeadlessConfig{
 			UserAgent:     r.c.Headless.UserAgent,
 			Mode:          r.c.Headless.Mode,
 			URL:           r.c.Headless.URL,
@@ -124,11 +123,13 @@ func (r *rendora) run() error {
 			InitialCap:    r.c.Headless.InitialCap,
 			IdleTimeout:   r.c.Headless.IdleTimeout,
 		})
+
 		if err != nil {
 			return err
 		}
 
-		r.hp = headlessClientPool
+		r.hc = hc
+
 		log.Println("Connected to headless Chrome")
 
 		if r.c.Server.Metrics {

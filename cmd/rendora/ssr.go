@@ -15,7 +15,6 @@ package rendora
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -47,23 +46,14 @@ func (r *rendora) getHeadless(uri string) (*service.HeadlessResponse, error) {
 		r.metrics.Duration.Observe(elapsed)
 	}
 
-	h, err := r.hp.Get()
+	headlessResponse, err := r.hc.GetResponse(r.c.Target.URL + uri)
 	if err != nil {
 		return nil, err
 	}
-	defer r.hp.Put(h)
 
-	if v, ok := h.(*service.HeadlessClient); ok {
-		headlessResponse, err := v.GetResponse(r.c.Target.URL + uri)
-		if err != nil {
-			return nil, err
-		}
+	headlessResponse.Latency = elapsed
 
-		headlessResponse.Latency = elapsed
-		return headlessResponse, nil
-	}
-
-	return nil, errors.New("assert headless client error")
+	return headlessResponse, nil
 }
 
 func (r *rendora) getResponse(uri string) (*service.HeadlessResponse, error) {
