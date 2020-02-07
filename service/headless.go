@@ -87,7 +87,11 @@ func resolveURLHostname(arg string) (string, error) {
 
 func checkHeadless(arg string) error {
 	doCheck := func() error {
-		resp, err := http.Get(arg + "/json/version")
+		client := http.Client{
+			Timeout: time.Duration(3 * time.Second),
+		}
+
+		resp, err := client.Get(arg + "/json/version")
 		if err != nil {
 			return err
 		}
