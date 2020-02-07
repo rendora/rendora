@@ -119,9 +119,6 @@ func (r *rendora) run() error {
 			InternalURL:   r.c.Headless.Internal.URL,
 			WaitReadyNode: r.c.Headless.WaitReadyNode,
 			WaitTimeout:   r.c.Headless.WaitTimeout,
-			MaxCap:        r.c.Headless.MaxCap,
-			InitialCap:    r.c.Headless.InitialCap,
-			IdleTimeout:   r.c.Headless.IdleTimeout,
 		})
 
 		if err != nil {
