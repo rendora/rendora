@@ -155,7 +155,7 @@ func (c *HeadlessClient) Close() error {
 }
 
 // GetResponse GoTo navigates to the url, fetches the DOM and returns HeadlessResponse
-func (c *HeadlessClient) GetResponse(uri string) (*HeadlessResponse, error) {
+func (c *HeadlessClient) GetResponse(uri string, mobile bool) (*HeadlessResponse, error) {
 	// solve google 404
 	uri = strings.ReplaceAll(uri, "+", "")
 	if !strings.Contains(uri, "?") && strings.Contains(uri, "&") {
@@ -171,7 +171,7 @@ func (c *HeadlessClient) GetResponse(uri string) (*HeadlessResponse, error) {
 	timeoutCtx, cancle := context.WithTimeout(taskCtx, time.Duration(c.Cfg.Timeout)*time.Second)
 	defer cancle()
 
-	err := chromedp.Run(timeoutCtx, c.scrapIt(uri, &res))
+	err := chromedp.Run(timeoutCtx, c.scrapIt(uri, &res, mobile))
 	if err != nil {
 		return nil, err
 	}
@@ -179,9 +179,14 @@ func (c *HeadlessClient) GetResponse(uri string) (*HeadlessResponse, error) {
 	return &HeadlessResponse{Content: res}, nil
 }
 
-func (c *HeadlessClient) scrapIt(url string, str *string) chromedp.Tasks {
+func (c *HeadlessClient) scrapIt(url string, str *string, mobile bool) chromedp.Tasks {
+	d := device.Info{UserAgent: c.Cfg.UserAgent, Width: 1440, Height: 1000}
+	if mobile {
+		d = device.IPhone7.Device()
+	}
+
 	return chromedp.Tasks{
-		chromedp.Emulate(device.Info{UserAgent: c.Cfg.UserAgent, Width: 1440, Height: 1000}),
+		chromedp.Emulate(d),
 		chromedp.Navigate(url),
 		chromedp.Sleep(time.Duration(c.Cfg.WaitTimeout) * time.Millisecond),
 		chromedp.OuterHTML(c.Cfg.WaitReadyNode, str),

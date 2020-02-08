@@ -199,6 +199,11 @@ func (r *rendora) middleware() gin.HandlerFunc {
 				return
 			}
 
+			agent := c.Request.Header.Get("User-Agent")
+			if strings.Contains(strings.ToLower(agent), "mobile") {
+				c.Set("mobile", true)
+			}
+
 			if r.c.Node == nodeAll {
 				r.getSSR(c)
 			} else {

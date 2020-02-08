@@ -21,7 +21,8 @@ import (
 )
 
 type apiRenderArgs struct {
-	URI string `json:"uri" binding:"required"`
+	URI    string `json:"uri" binding:"required"`
+	Mobile bool   `json:"mobile"`
 }
 
 // APIRender provides the http client with HeadlessResponse
@@ -32,7 +33,7 @@ func (r *rendora) apiRender(c *gin.Context) {
 		return
 	}
 
-	resp, err := r.getResponse(args.URI)
+	resp, err := r.getResponse(args.URI, args.Mobile)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

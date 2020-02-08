@@ -14,6 +14,7 @@ limitations under the License.
 package rendora
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -38,7 +39,7 @@ type reqBody struct {
 
 var targetURL string
 
-func (r *rendora) getHeadless(uri string) (*service.HeadlessResponse, error) {
+func (r *rendora) getHeadless(uri string, mobile bool) (*service.HeadlessResponse, error) {
 	timeStart := time.Now()
 	elapsed := float64(time.Since(timeStart)) / float64(time.Duration(1*time.Millisecond))
 
@@ -46,7 +47,7 @@ func (r *rendora) getHeadless(uri string) (*service.HeadlessResponse, error) {
 		r.metrics.Duration.Observe(elapsed)
 	}
 
-	headlessResponse, err := r.hc.GetResponse(r.c.Target.URL + uri)
+	headlessResponse, err := r.hc.GetResponse(r.c.Target.URL+uri, mobile)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +57,7 @@ func (r *rendora) getHeadless(uri string) (*service.HeadlessResponse, error) {
 	return headlessResponse, nil
 }
 
-func (r *rendora) getResponse(uri string) (*service.HeadlessResponse, error) {
+func (r *rendora) getResponse(uri string, mobile bool) (*service.HeadlessResponse, error) {
 	cKey := r.c.Cache.Redis.KeyPrefix + ":" + uri
 	resp, exists, err := r.cache.Get(cKey)
 	if err != nil {
@@ -71,7 +72,7 @@ func (r *rendora) getResponse(uri string) (*service.HeadlessResponse, error) {
 		return resp, nil
 	}
 
-	dt, err := r.getHeadless(uri)
+	dt, err := r.getHeadless(uri, mobile)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +91,8 @@ func (r *rendora) getResponse(uri string) (*service.HeadlessResponse, error) {
 }
 
 func (r *rendora) getSSR(c *gin.Context) {
-	resp, err := r.getResponse(c.Request.RequestURI)
+	mobile := c.GetBool("mobile")
+	resp, err := r.getResponse(c.Request.RequestURI, mobile)
 	if err != nil {
 		fmt.Printf("get ssr error: %s:", err.Error())
 		c.AbortWithStatus(http.StatusServiceUnavailable)
@@ -122,8 +124,22 @@ func (r *rendora) getSSRFromProxy(c *gin.Context) {
 		Path:   "/render",
 	}
 
-	param := `{"uri":"` + c.Request.RequestURI + `"}`
-	resp, err := http.Post(reqURL.String(), "Content-Type: application/json", strings.NewReader(param))
+	mobile := c.GetBool("mobile")
+
+	param, err := json.Marshal(struct {
+		URI    string `json:"uri"`
+		Mobile bool   `json:"mobile"`
+	}{
+		c.Request.RequestURI,
+		mobile,
+	})
+
+	if err != nil {
+		c.AbortWithStatus(http.StatusServiceUnavailable)
+		return
+	}
+
+	resp, err := http.Post(reqURL.String(), "Content-Type: application/json", bytes.NewReader(param))
 	if err != nil {
 		fmt.Printf("get ssr error: %s:", err.Error())
 		c.AbortWithStatus(http.StatusServiceUnavailable)
@@ -159,10 +175,16 @@ func (r *rendora) getSSRFromRendertron(c *gin.Context) {
 	port := strconv.Itoa(int(r.c.StaticConfig.Proxy.Port))
 	host := strings.Join([]string{r.c.StaticConfig.Proxy.Address, port}, ":")
 
+	var rq string
+	if mobile := c.GetBool("mobile"); mobile {
+		rq = "mobile"
+	}
+
 	reqURL := url.URL{
-		Scheme: r.c.StaticConfig.Proxy.Schema,
-		Host:   host,
-		Path:   "render/" + r.c.Target.URL + c.Request.RequestURI,
+		Scheme:   r.c.StaticConfig.Proxy.Schema,
+		Host:     host,
+		Path:     "render/" + r.c.Target.URL + c.Request.RequestURI,
+		RawQuery: rq,
 	}
 
 	resp, err := http.Get(reqURL.String())
