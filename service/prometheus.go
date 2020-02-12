@@ -11,20 +11,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package rendora
+package service
 
 import "github.com/prometheus/client_golang/prometheus"
 
-//metrics provides various Prometheus metrics
-type metrics struct {
+//Metrics provides various Prometheus metrics
+type Metrics struct {
 	Duration       prometheus.Histogram
 	CountTotal     prometheus.Counter
 	CountSSR       prometheus.Counter
 	CountSSRCached prometheus.Counter
 }
 
-func (R *Rendora) initPrometheus() {
-	ret := &metrics{}
+// InitPrometheus init metrics instance
+func InitPrometheus() *Metrics {
+	ret := &Metrics{}
 	ret.CountTotal = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "rendora_requests_total",
 		Help: "Total Requests",
@@ -49,5 +50,6 @@ func (R *Rendora) initPrometheus() {
 	prometheus.MustRegister(ret.CountTotal)
 	prometheus.MustRegister(ret.CountSSR)
 	prometheus.MustRegister(ret.Duration)
-	R.metrics = ret
+
+	return ret
 }

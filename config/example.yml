@@ -12,13 +12,13 @@ cache:
 target:
     url: "http://127.0.0.1"
 
-backend:
-    url: "http://127.0.0.1:8000"
-
 headless:
     internal:
       url: http://headless:9222
-
+    waitReadyNode: 'footer'
+    initialCap: 5
+    maxCap: 10
+    idleTimeout: 3600
 output:
     minify: true
 

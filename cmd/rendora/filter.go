@@ -47,10 +47,10 @@ func hasPrefixinSlice(slice []string, str string) bool {
 }
 
 //isWhitelisted checks whether the current request is whitelisted (i.e. should be SSR'ed) or not
-func (R *Rendora) isWhitelisted(c *gin.Context) bool {
+func (r *rendora) isWhitelisted(c *gin.Context) bool {
 	mua := c.Request.Header.Get("User-Agent")
 	muaLower := strings.ToLower(mua)
-	filters := &R.c.Filters
+	filters := &r.c.Filters
 
 	lenKeywords := len(filters.UserAgent.Exceptions.Keywords)
 	lenExceptions := len(filters.UserAgent.Exceptions.Exact)

@@ -1,18 +1,11 @@
 
-VERSION ?= $(shell git describe --always)
-GOVERSION ?= $(shell go version)
-
-PREFIX ?= /usr
-BINPREFIX ?= $(PREFIX)/bin
-PROGRAM := rendora
+gitVersion ?= $(shell git describe --always)
 
 build:
-	cd ./cmd/rendora; \
-	CGO_ENABLED=0 go build -ldflags "-X main.VERSION=$(VERSION)"
+	CGO_ENABLED=0 go build -ldflags "-X main.gitVersion=$(gitVersion)"
 
 install:
-	mkdir -p "$(DESTDIR)$(BINPREFIX)"
-	cp -pf cmd/rendora/$(PROGRAM) "$(DESTDIR)$(BINPREFIX)"
+	CGO_ENABLED=0 go install -ldflags "-X main.gitVersion=$(gitVersion)"
 
 clean:
-	rm -f cmd/rendora/rendora
+	rm -f rendora
