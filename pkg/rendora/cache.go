@@ -17,7 +17,7 @@ import (
 	"bytes"
 	"time"
 
-	"github.com/go-redis/redis"
+	redis "github.com/go-redis/redis/v7"
 
 	cache "github.com/patrickmn/go-cache"
 )
@@ -26,7 +26,7 @@ import (
 type cacheStore struct {
 	DefaultTimeout time.Duration
 	Type           uint8
-	redis          *redis.Client
+	redis          redis.UniversalClient
 	gocache        *cache.Cache
 	rendora        *Rendora
 }
@@ -50,8 +50,8 @@ func (R *Rendora) initCacheStore() {
 		cs.gocache = cache.New(cs.DefaultTimeout, 4*time.Minute)
 	case "redis":
 		cs.Type = typeRedis
-		cs.redis = redis.NewClient(&redis.Options{
-			Addr:     R.c.Cache.Redis.Address,
+		cs.redis = redis.NewUniversalClient(&redis.UniversalOptions{
+			Addrs:    R.c.Cache.Redis.Address,
 			Password: R.c.Cache.Redis.Password,
 			DB:       R.c.Cache.Redis.DB,
 		})

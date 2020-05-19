@@ -58,7 +58,7 @@ type rendoraConfig struct {
 		Type    string `valid:"in(local|redis|none)"`
 		Timeout uint32 `valid:"range(1|4294967295)"`
 		Redis   struct {
-			Address   string `valid:"url"`
+			Address   []string `valid:"url"`
 			Password  string
 			DB        int    `valid:"range(0|15)"`
 			KeyPrefix string `mapstructure:"keyPrefix"`
