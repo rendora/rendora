@@ -78,7 +78,7 @@ func (c *cacheStore) set(cKey string, d *HeadlessResponse) error {
 		if err != nil {
 			return err
 		}
-		err = c.redis.SetNX(cKey, string(op.Bytes()), c.DefaultTimeout).Err()
+		err = c.redis.SetNX(cKey, op.String(), c.DefaultTimeout).Err()
 		if err != nil {
 			return err
 		}
