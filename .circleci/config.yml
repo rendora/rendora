@@ -3,7 +3,7 @@ jobs:
     build:
         working_directory: ~/rendora
         docker:
-            - image: circleci/golang:1.11
+            - image: circleci/golang:1.21.0
         steps:
             - checkout
             - run: make build
