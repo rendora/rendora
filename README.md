@@ -86,7 +86,7 @@ you can build and run Rendora from source code, (**NOTE**: please read the [conf
 ``` bash
 git clone https://github.com/rendora/rendora
 cd rendora
-# MAKE SURE YOU HAVE GO V1.11+ INSTALLED
+# MAKE SURE YOU HAVE GO V1.21.0+ INSTALLED
 make build
 sudo make install
 rendora --config CONFIG_FILE.yaml
